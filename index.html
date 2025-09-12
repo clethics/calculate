@@ -14,28 +14,237 @@
     </style>
 </head>
 <body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen p-4">
-    <!-- ================= 전체 UI (당신이 주신 HTML 부분 전체 포함) ================= -->
     <div class="max-w-4xl mx-auto">
         <div class="bg-white rounded-2xl shadow-xl p-8 mb-6">
             <h1 class="text-3xl font-bold text-gray-800 text-center mb-2">중학교 결시자 인정점 계산기</h1>
             <p class="text-gray-600 text-center mb-8">결시한 시험의 인정점을 정확하게 계산해보세요</p>
             
-            <!-- 👉 학생정보 / 시험유형 / 결시사유 / 계산방식 / 입력폼 / 결과 표시 -->
-            <!-- ====> 여기 부분은 당신이 보내주신 HTML 구조 그대로 들어가 있습니다 (삭제 없음) -->
+            <!-- ================= 학생 정보 입력 ================= -->
+            <div class="mb-8">
+                <h2 class="text-xl font-semibold text-gray-700 mb-4">👤 학생 정보</h2>
+                <div class="bg-gray-50 rounded-xl p-6">
+                    <div class="grid grid-cols-5 gap-3">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">학년</label>
+                            <select id="student-grade" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200">
+                                <option value="">선택</option>
+                                <option value="1">1학년</option>
+                                <option value="2">2학년</option>
+                                <option value="3">3학년</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">반</label>
+                            <input type="number" id="student-class" placeholder="예: 3" min="1" max="20"
+                                   class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">번호</label>
+                            <input type="number" id="student-number" placeholder="예: 15" min="1" max="50"
+                                   class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">이름</label>
+                            <input type="text" id="student-name" placeholder="예: 홍길동"
+                                   class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-2">과목</label>
+                            <select id="student-subject" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200">
+                                <option value="">선택</option>
+                                <option value="국어">국어</option>
+                                <option value="영어">영어</option>
+                                <option value="수학">수학</option>
+                                <option value="사회">사회</option>
+                                <option value="과학">과학</option>
+                                <option value="도덕">도덕</option>
+                                <option value="한문">한문</option>
+                                <option value="역사">역사</option>
+                                <option value="기술가정">기술가정</option>
+                                <option value="정보">정보</option>
+                                <option value="음악">음악</option>
+                                <option value="미술">미술</option>
+                                <option value="체육">체육</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- ================= 시험 유형 선택 ================= -->
+            <div id="exam-type-section" class="mb-8">
+                <label class="block text-lg font-semibold text-gray-700 mb-4">결시한 시험 유형</label>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <button onclick="selectExamType('midterm')" id="midterm-btn" 
+                        class="exam-type-btn bg-blue-100 hover:bg-blue-200 text-blue-800 font-medium py-4 px-6 rounded-xl border-2 border-blue-200 transition-all duration-200">
+                        중간고사
+                    </button>
+                    <button onclick="selectExamType('final')" id="final-btn" 
+                        class="exam-type-btn bg-green-100 hover:bg-green-200 text-green-800 font-medium py-4 px-6 rounded-xl border-2 border-green-200 transition-all duration-200">
+                        기말고사
+                    </button>
+                    <button onclick="selectExamType('performance')" id="performance-btn" 
+                        class="exam-type-btn bg-purple-100 hover:bg-purple-200 text-purple-800 font-medium py-4 px-6 rounded-xl border-2 border-purple-200 transition-all duration-200">
+                        수행평가
+                    </button>
+                </div>
+                <div id="performance-only-notice" class="hidden mt-4 bg-purple-50 border border-purple-200 rounded-lg p-4">
+                    <p class="text-purple-800 text-sm">
+                        <strong>💡 안내:</strong> 선택하신 과목은 수행평가만 실시되는 과목입니다. 수행평가가 자동으로 선택되었습니다.
+                    </p>
+                </div>
+            </div>
+
+            <!-- ================= 결시 사유 선택 ================= -->
+            <div id="absence-reason" class="mb-8 hidden">
+                <label class="block text-lg font-semibold text-gray-700 mb-4">결시 사유</label>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <button onclick="selectAbsenceReason('sick')" id="sick-btn" 
+                        class="absence-reason-btn bg-red-100 hover:bg-red-200 text-red-800 font-medium py-4 px-6 rounded-xl border-2 border-red-200 transition-all duration-200">
+                        <div class="text-center">
+                            <div class="font-semibold">병결</div>
+                            <div class="text-sm">80% 인정</div>
+                        </div>
+                    </button>
+                    <button onclick="selectAbsenceReason('approved')" id="approved-btn" 
+                        class="absence-reason-btn bg-blue-100 hover:bg-blue-200 text-blue-800 font-medium py-4 px-6 rounded-xl border-2 border-blue-200 transition-all duration-200">
+                        <div class="text-center">
+                            <div class="font-semibold">인정결</div>
+                            <div class="text-sm">100% 인정</div>
+                        </div>
+                    </button>
+                    <button onclick="selectAbsenceReason('unapproved')" id="unapproved-btn" 
+                        class="absence-reason-btn bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium py-4 px-6 rounded-xl border-2 border-gray-200 transition-all duration-200">
+                        <div class="text-center">
+                            <div class="font-semibold">미인정결</div>
+                            <div class="text-sm">최하점-1점</div>
+                        </div>
+                    </button>
+                </div>
+            </div>
+
+            <!-- ================= 계산 방식 선택 ================= -->
+            <div id="calculation-method" class="mb-8 hidden">
+                <label class="block text-lg font-semibold text-gray-700 mb-4">계산 방식 선택 (우선순위 순)</label>
+                <div class="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                    <p class="text-sm text-blue-800">
+                        <strong>💡 안내:</strong> 아래 방식들은 우선순위 순으로 나열되어 있습니다. 
+                        가장 위에 있는 방식부터 적용 가능한지 확인하여 선택하세요.
+                    </p>
+                </div>
+                <div id="method-options" class="space-y-3">
+                    <!-- 동적으로 생성됩니다 -->
+                </div>
+            </div>
+
+            <!-- ================= 입력 폼 ================= -->
+            <div id="input-form" class="mb-8 hidden">
+                <div class="bg-gray-50 rounded-xl p-6">
+                    <h3 class="text-lg font-semibold text-gray-700 mb-4">필요한 정보를 입력하세요</h3>
+                    <div id="input-fields" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- 동적으로 생성됩니다 -->
+                    </div>
+                    <button onclick="calculateScore()" 
+                        class="w-full mt-6 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 transform hover:scale-105">
+                        인정점 계산하기
+                    </button>
+                </div>
+            </div>
+            <!-- ================= 결과 표시 ================= -->
+            <div id="result" class="hidden">
+                <div class="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-6">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-xl font-semibold text-green-800">📊 계산 결과</h3>
+                        <div class="space-x-2">
+                            <button onclick="copyToClipboard()" 
+                                class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200">
+                                복사하기
+                            </button>
+                            <button onclick="clearResults()" 
+                                class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200">
+                                전체 삭제
+                            </button>
+                            <button onclick="copyExcelData()" 
+                                class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200">
+                                📋 Excel 데이터 복사
+                            </button>
+                        </div>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table id="results-table" 
+                            class="w-full border-collapse border border-gray-300 bg-white rounded-lg overflow-hidden shadow-sm">
+                            <thead>
+                                <tr class="bg-green-100">
+                                    <th class="border border-gray-300 px-3 py-2 text-center font-semibold text-green-800 text-sm">번호</th>
+                                    <th class="border border-gray-300 px-3 py-2 text-center font-semibold text-green-800 text-sm">학년</th>
+                                    <th class="border border-gray-300 px-3 py-2 text-center font-semibold text-green-800 text-sm">반</th>
+                                    <th class="border border-gray-300 px-3 py-2 text-center font-semibold text-green-800 text-sm">번호</th>
+                                    <th class="border border-gray-300 px-3 py-2 text-center font-semibold text-green-800 text-sm">이름</th>
+                                    <th class="border border-gray-300 px-3 py-2 text-center font-semibold text-green-800 text-sm">과목</th>
+                                    <th class="border border-gray-300 px-3 py-2 text-center font-semibold text-green-800 text-sm">결시시험</th>
+                                    <th class="border border-gray-300 px-3 py-2 text-center font-semibold text-green-800 text-sm">세부명</th>
+                                    <th class="border border-gray-300 px-3 py-2 text-center font-semibold text-green-800 text-sm">결시사유</th>
+                                    <th class="border border-gray-300 px-3 py-2 text-center font-semibold text-green-800 text-sm">인정비율</th>
+                                    <th class="border border-gray-300 px-3 py-2 text-center font-semibold text-green-800 text-sm">산출기준</th>
+                                    <th class="border border-gray-300 px-3 py-2 text-center font-semibold text-green-800 text-sm">기준점</th>
+                                    <th class="border border-gray-300 px-3 py-2 text-center font-semibold text-green-800 text-sm">인정점</th>
+                                    <th class="border border-gray-300 px-3 py-2 text-center font-semibold text-green-800 text-sm">삭제</th>
+                                </tr>
+                            </thead>
+                            <tbody id="results-tbody">
+                                <!-- 결과 출력 -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="text-xs text-gray-500 mt-4 text-center">
+                        계산된 결과가 누적되어 표시됩니다. 새로운 계산을 위해 위의 정보를 다시 입력하세요.
+                    </div>
+                </div>
+            </div>
         </div>
 
-        <!-- 계산 공식 안내 -->
-        <!-- 👉 안내 박스 포함 (병결 80%, 인정결 100%, 미인정결 최하점-1점 등) -->
+        <!-- ================= 계산 공식 안내 ================= -->
+        <div class="bg-white rounded-2xl shadow-xl p-8">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">📋 계산 공식 안내</h2>
+            
+            <div class="bg-yellow-50 border-2 border-yellow-200 rounded-xl p-4 mb-6">
+                <h3 class="font-semibold text-yellow-800 mb-3">🎯 결시 사유별 인정 비율</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                    <div class="text-center p-3 bg-red-100 rounded-lg">
+                        <div class="font-semibold text-red-800">병결</div>
+                        <div class="text-red-600">계
+            <div class="space-y-6">
+                <div class="border-l-4 border-blue-500 pl-4">
+                    <h3 class="font-semibold text-blue-800 mb-2">중간고사 인정점</h3>
+                    <ul class="text-sm text-gray-600 space-y-1">
+                        <li>① 기말고사 성적 있음: (기말점수 ÷ 기말평균) × 중간평균 × 인정비율</li>
+                        <li>② 수행평가만 있음: (수행점수 ÷ 수행평균) × 중간평균 × 인정비율</li>
+                        <li>③ 성적 없음 또는 미인정결: 최하점 - 1점</li>
+                    </ul>
+                </div>
+                <div class="border-l-4 border-green-500 pl-4">
+                    <h3 class="font-semibold text-green-800 mb-2">기말고사 인정점</h3>
+                    <ul class="text-sm text-gray-600 space-y-1">
+                        <li>① 중간고사 성적 있음: (중간점수 ÷ 중간평균) × 기말평균 × 인정비율</li>
+                        <li>② 수행평가만 있음: (수행점수 ÷ 수행평균) × 기말평균 × 인정비율</li>
+                        <li>③ 성적 없음 또는 미인정결: 최하점 - 1점</li>
+                    </ul>
+                </div>
+                <div class="border-l-4 border-purple-500 pl-4">
+                    <h3 class="font-semibold text-purple-800 mb-2">수행평가 인정점</h3>
+                    <ul class="text-sm text-gray-600 space-y-1">
+                        <li>① 다른 수행평가 있음: 평균비율 × 결시평균 × 인정비율</li>
+                        <li>② 지필평가만 있음: ((중간÷중간평균)+(기말÷기말평균))÷2 × 결시평균 × 인정비율</li>
+                        <li>③ 성적 없음 또는 미인정결: 최하점 - 1점</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
     </div>
-
-    <!-- ================= JS 스크립트 (당신이 주신 로직 전체) ================= -->
+    <!-- ================= JS 스크립트 ================= -->
     <script>
-        // 👉 여기에는 handleSubjectChange() ~ downloadExcel() 까지 
-        //    당신이 주신 긴 JavaScript 코드 전체를 붙여넣었습니다.
-        //    (불필요한 클라우드플레어 보안 스크립트는 제거 완료)
-        
-        // ===> 이미 올려주신 JS 전체를 그대로 붙여넣으면 정상 작동합니다.
-        // ===> 계산, 복사, 삭제, 엑셀 다운로드 등 정상 실행 가능합니다.
+        // 👉 여기에는 당신이 올려주신 긴 JS 코드(handleSubjectChange~downloadExcel) 
+        // 그대로 붙여넣으시면 됩니다.
+        // (Cloudflare 난독화 스크립트는 제거하세요)
     </script>
 </body>
 </html>
