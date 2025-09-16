@@ -1,2127 +1,298 @@
 <!DOCTYPE html>
 <html lang="ko">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>중학교 결시자 인정점 계산기</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap');
-        body { font-family: 'Noto Sans KR', sans-serif; }
-        .selected { 
-            @apply ring-4 ring-blue-300 ring-opacity-50 transform scale-105; 
-        }
-        .btn-hover:hover { 
-            @apply transform scale-105 transition-all duration-200; 
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>일광중학교 결시자 인정점 계산기</title>
+  <!-- TailwindCSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- ✅ Excel 저장 라이브러리 -->
+  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap');
+    body { font-family: 'Noto Sans KR', sans-serif; }
+    .selected { @apply ring-4 ring-blue-300 ring-opacity-50 transform scale-105; }
+    .btn-hover:hover { @apply transform scale-105 transition-all duration-200; }
+  </style>
 </head>
 <body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen p-4">
-    <div class="max-w-4xl mx-auto">
-        <div class="bg-white rounded-2xl shadow-xl p-8 mb-6">
-            <h1 class="text-3xl font-bold text-gray-800 text-center mb-2">중학교 결시자 인정점 계산기</h1>
-            <p class="text-gray-600 text-center mb-8">결시한 시험의 인정점을 정확하게 계산해보세요</p>
-            
-            <!-- 학년/과목 선택 -->
-            <div class="mb-8">
-                <h2 class="text-xl font-semibold text-gray-700 mb-4">👤 학년/과목 선택</h2>
-                <div class="bg-gray-50 rounded-xl p-6">
-                    <div class="grid grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">학년</label>
-                            <select id="student-grade" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                                <option value="">선택</option>
-                                <option value="1">1학년</option>
-                                <option value="2">2학년</option>
-                                <option value="3">3학년</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">과목</label>
-                            <select id="student-subject" onchange="handleSubjectChange()" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                                <option value="">선택</option>
-                                <option value="국어">국어</option>
-                                <option value="영어">영어</option>
-                                <option value="수학">수학</option>
-                                <option value="사회">사회</option>
-                                <option value="과학">과학</option>
-                                <option value="도덕">도덕</option>
-                                <option value="한문">한문</option>
-                                <option value="역사">역사</option>
-                                <option value="기술가정">기술가정</option>
-                                <option value="정보">정보</option>
-                                <option value="음악">음악</option>
-                                <option value="미술">미술</option>
-                                <option value="체육">체육</option>
-                            </select>
-                        </div>
-                    </div>
-                </div>
+  <div class="max-w-4xl mx-auto">
+    <div class="bg-white rounded-2xl shadow-xl p-8 mb-6">
+      <h1 class="text-3xl font-bold text-gray-800 text-center mb-2">🏫 일광중학교 결시자 인정점 계산기</h1>
+      <p class="text-gray-600 text-center mb-8">😊보다 편리한 인정점 계산😊</p>
+      
+      <!-- 학년/과목 선택 -->
+      <div class="mb-8">
+        <h2 class="text-xl font-semibold text-gray-700 mb-4">👤 학년/과목 선택</h2>
+        <div class="bg-gray-50 rounded-xl p-6">
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">학년</label>
+              <select id="student-grade" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                <option value="">선택</option>
+                <option value="1">1학년</option>
+                <option value="2">2학년</option>
+                <option value="3">3학년</option>
+              </select>
             </div>
-
-            <!-- 평균 점수 관리 -->
-            <div class="mb-8">
-                <h2 class="text-xl font-semibold text-gray-700 mb-4">📊 평균 점수 관리</h2>
-                <div class="bg-blue-50 rounded-xl p-6 mb-4">
-                    <div class="flex justify-between items-center mb-4">
-                        <p class="text-blue-800 text-sm">
-                            <strong>💡 안내:</strong> 한 번 입력한 평균 점수는 자동으로 저장되어 다음 계산에서 재사용됩니다.
-                        </p>
-                        <button type="button" onclick="clearAllAverages()" 
-                                class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200">
-                            전체 초기화
-                        </button>
-                    </div>
-                    
-                    <!-- 지필고사 평균 -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6" id="written-exam-averages">
-                        <div class="bg-white rounded-lg p-4 border border-blue-200">
-                            <h3 class="font-semibold text-blue-800 mb-2">중간고사 평균</h3>
-                            <div class="flex items-center space-x-2">
-                                <input type="number" step="0.1" id="saved-midterm-avg" placeholder="예: 75.5" 
-                                       class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                                       onchange="saveAverage('midterm', this.value)">
-                                <button type="button" onclick="clearAverage('midterm')" 
-                                        class="bg-gray-400 hover:bg-gray-500 text-white px-2 py-1 rounded text-xs">
-                                    삭제
-                                </button>
-                            </div>
-                        </div>
-                        <div class="bg-white rounded-lg p-4 border border-blue-200">
-                            <h3 class="font-semibold text-blue-800 mb-2">기말고사 평균</h3>
-                            <div class="flex items-center space-x-2">
-                                <input type="number" step="0.1" id="saved-final-avg" placeholder="예: 78.2" 
-                                       class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-                                       onchange="saveAverage('final', this.value)">
-                                <button type="button" onclick="clearAverage('final')" 
-                                        class="bg-gray-400 hover:bg-gray-500 text-white px-2 py-1 rounded text-xs">
-                                    삭제
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- 영어듣기 평균 (영어 과목 선택 시에만 표시) -->
-                    <div class="grid grid-cols-1 gap-4 mb-6 hidden" id="english-listening-average">
-                        <div class="bg-white rounded-lg p-4 border border-orange-200">
-                            <h3 class="font-semibold text-orange-800 mb-2">🎧 영어듣기 평균</h3>
-                            <div class="flex items-center space-x-2">
-                                <input type="number" step="0.1" id="saved-listening-avg" placeholder="예: 82.5" 
-                                       class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
-                                       onchange="saveAverage('englishListening', this.value)">
-                                <button type="button" onclick="clearAverage('englishListening')" 
-                                        class="bg-gray-400 hover:bg-gray-500 text-white px-2 py-1 rounded text-xs">
-                                    삭제
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <!-- 수행평가 평균 (음악/미술/체육 과목 선택 시에만 표시) -->
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 hidden" id="performance-averages">
-                        <div class="bg-white rounded-lg p-4 border border-purple-200">
-                            <h3 class="font-semibold text-purple-800 mb-2">🎨 <span id="performance1-title">수행평가 1</span></h3>
-                            <div class="mb-2">
-                                <input type="text" id="saved-performance1-name" placeholder="영역명 (예: 실기)" 
-                                       class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
-                                       onchange="savePerformanceAreaName('performance1', this.value)">
-                            </div>
-                            <div class="flex items-center space-x-2">
-                                <input type="number" step="0.1" id="saved-performance1-avg" placeholder="예: 85.0" 
-                                       class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
-                                       onchange="saveAverage('performance1', this.value)">
-                                <button type="button" onclick="clearPerformanceArea('performance1')" 
-                                        class="bg-gray-400 hover:bg-gray-500 text-white px-2 py-1 rounded text-xs">
-                                    삭제
-                                </button>
-                            </div>
-                        </div>
-                        <div class="bg-white rounded-lg p-4 border border-purple-200">
-                            <h3 class="font-semibold text-purple-800 mb-2">🎨 <span id="performance2-title">수행평가 2</span></h3>
-                            <div class="mb-2">
-                                <input type="text" id="saved-performance2-name" placeholder="영역명 (예: 이론)" 
-                                       class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
-                                       onchange="savePerformanceAreaName('performance2', this.value)">
-                            </div>
-                            <div class="flex items-center space-x-2">
-                                <input type="number" step="0.1" id="saved-performance2-avg" placeholder="예: 87.5" 
-                                       class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
-                                       onchange="saveAverage('performance2', this.value)">
-                                <button type="button" onclick="clearPerformanceArea('performance2')" 
-                                        class="bg-gray-400 hover:bg-gray-500 text-white px-2 py-1 rounded text-xs">
-                                    삭제
-                                </button>
-                            </div>
-                        </div>
-                        <div class="bg-white rounded-lg p-4 border border-purple-200">
-                            <h3 class="font-semibold text-purple-800 mb-2">🎨 <span id="performance3-title">수행평가 3</span></h3>
-                            <div class="mb-2">
-                                <input type="text" id="saved-performance3-name" placeholder="영역명 (예: 태도)" 
-                                       class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
-                                       onchange="savePerformanceAreaName('performance3', this.value)">
-                            </div>
-                            <div class="flex items-center space-x-2">
-                                <input type="number" step="0.1" id="saved-performance3-avg" placeholder="예: 83.2" 
-                                       class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
-                                       onchange="saveAverage('performance3', this.value)">
-                                <button type="button" onclick="clearPerformanceArea('performance3')" 
-                                        class="bg-gray-400 hover:bg-gray-500 text-white px-2 py-1 rounded text-xs">
-                                    삭제
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-
-
-                </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-2">과목</label>
+              <select id="student-subject" onchange="handleSubjectChange()" class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                <option value="">선택</option>
+                <option value="국어">국어</option>
+                <option value="영어">영어</option>
+                <option value="수학">수학</option>
+                <option value="사회">사회</option>
+                <option value="과학">과학</option>
+                <option value="도덕">도덕</option>
+                <option value="한문">한문</option>
+                <option value="역사">역사</option>
+                <option value="기술가정">기술가정</option>
+                <option value="정보">정보</option>
+                <option value="음악">음악</option>
+                <option value="미술">미술</option>
+                <option value="체육">체육</option>
+              </select>
             </div>
-
-            <!-- 학생 정보 입력 -->
-            <div class="mb-8">
-                <h2 class="text-xl font-semibold text-gray-700 mb-4">👤 학생 정보</h2>
-                <div class="bg-gray-50 rounded-xl p-6">
-                    <div class="grid grid-cols-3 gap-4">
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">반</label>
-                            <input type="number" id="student-class" placeholder="예: 3" min="1" max="20"
-                                   class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">번호</label>
-                            <input type="number" id="student-number" placeholder="예: 15" min="1" max="50"
-                                   class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">이름</label>
-                            <input type="text" id="student-name" placeholder="예: 홍길동"
-                                   class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                        </div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- 시험 유형 선택 -->
-            <div id="exam-type-section" class="mb-8">
-                <label class="block text-lg font-semibold text-gray-700 mb-4">결시한 시험 유형</label>
-                <div id="exam-type-buttons" class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <button type="button" onclick="selectExamType('midterm')" id="midterm-btn" 
-                            class="btn-hover bg-blue-100 hover:bg-blue-200 text-blue-800 font-medium py-4 px-6 rounded-xl border-2 border-blue-200 transition-all duration-200">
-                        중간고사
-                    </button>
-                    <button type="button" onclick="selectExamType('final')" id="final-btn" 
-                            class="btn-hover bg-green-100 hover:bg-green-200 text-green-800 font-medium py-4 px-6 rounded-xl border-2 border-green-200 transition-all duration-200">
-                        기말고사
-                    </button>
-                    <button type="button" onclick="selectExamType('performance')" id="performance-btn" 
-                            class="btn-hover bg-purple-100 hover:bg-purple-200 text-purple-800 font-medium py-4 px-6 rounded-xl border-2 border-purple-200 transition-all duration-200">
-                        수행평가
-                    </button>
-                    <button type="button" onclick="selectExamType('english-listening')" id="english-listening-btn" 
-                            class="btn-hover bg-orange-100 hover:bg-orange-200 text-orange-800 font-medium py-4 px-6 rounded-xl border-2 border-orange-200 transition-all duration-200 hidden">
-                        🎧 영어듣기
-                    </button>
-                </div>
-                <div id="performance-only-notice" class="hidden mt-4 bg-purple-50 border border-purple-200 rounded-lg p-4">
-                    <p class="text-purple-800 text-sm">
-                        <strong>💡 안내:</strong> 선택하신 과목은 수행평가만 실시되는 과목입니다.
-                    </p>
-                </div>
-                <div id="english-listening-notice" class="hidden mt-4 bg-orange-50 border border-orange-200 rounded-lg p-4">
-                    <p class="text-orange-800 text-sm">
-                        <strong>🎧 안내:</strong> 영어 과목에서는 영어듣기 평가 인정점도 계산할 수 있습니다.
-                    </p>
-                </div>
-            </div>
-
-            <!-- 결시 사유 선택 -->
-            <div id="absence-reason" class="mb-8 hidden">
-                <label class="block text-lg font-semibold text-gray-700 mb-4">결시 사유</label>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <button type="button" onclick="selectAbsenceReason('sick')" id="sick-btn" 
-                            class="btn-hover bg-red-100 hover:bg-red-200 text-red-800 font-medium py-4 px-6 rounded-xl border-2 border-red-200 transition-all duration-200">
-                        <div class="text-center">
-                            <div class="font-semibold">병결</div>
-                            <div class="text-sm">80% 인정</div>
-                        </div>
-                    </button>
-                    <button type="button" onclick="selectAbsenceReason('approved')" id="approved-btn" 
-                            class="btn-hover bg-blue-100 hover:bg-blue-200 text-blue-800 font-medium py-4 px-6 rounded-xl border-2 border-blue-200 transition-all duration-200">
-                        <div class="text-center">
-                            <div class="font-semibold">인정결</div>
-                            <div class="text-sm">100% 인정</div>
-                        </div>
-                    </button>
-                    <button type="button" onclick="selectAbsenceReason('unapproved')" id="unapproved-btn" 
-                            class="btn-hover bg-gray-100 hover:bg-gray-200 text-gray-800 font-medium py-4 px-6 rounded-xl border-2 border-gray-200 transition-all duration-200">
-                        <div class="text-center">
-                            <div class="font-semibold">미인정결</div>
-                            <div class="text-sm">최하점-1점</div>
-                        </div>
-                    </button>
-                </div>
-            </div>
-
-            <!-- 계산 방식 선택 -->
-            <div id="calculation-method" class="mb-8 hidden">
-                <label class="block text-lg font-semibold text-gray-700 mb-4">계산 방식 선택</label>
-                <div id="method-options" class="space-y-3">
-                    <!-- 동적으로 생성됩니다 -->
-                </div>
-            </div>
-
-            <!-- 입력 폼 -->
-            <div id="input-form" class="mb-8 hidden">
-                <div class="bg-gray-50 rounded-xl p-6">
-                    <h3 class="text-lg font-semibold text-gray-700 mb-4">필요한 정보를 입력하세요</h3>
-                    <div id="input-fields" class="space-y-4">
-                        <!-- 동적으로 생성됩니다 -->
-                    </div>
-                    <button type="button" onclick="calculateScore()" 
-                            class="w-full mt-6 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-semibold py-3 px-6 rounded-xl transition-all duration-200 transform hover:scale-105">
-                        인정점 계산하기
-                    </button>
-                </div>
-            </div>
-
-            <!-- 결과 표시 -->
-            <div id="result" class="hidden">
-                <div class="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-6">
-                    <div class="flex justify-between items-center mb-4">
-                        <h3 class="text-xl font-semibold text-green-800">📊 계산 결과</h3>
-                       <div class="space-x-2">
-    <button type="button" onclick="copyResults()" 
-            class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200">
-        복사하기
-    </button>
-    <button type="button" onclick="downloadXLSX()" 
-            class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200">
-        Excel 저장
-    </button>
-    <button type="button" onclick="clearResults()" 
-            class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200">
-        전체 삭제
-    </button>
-</div>
-
-                    </div>
-                    <div class="overflow-x-auto">
-                        <table id="results-table" class="w-full border-collapse border border-gray-300 bg-white rounded-lg overflow-hidden shadow-sm">
-                            <thead>
-                                <tr class="bg-green-100">
-                                    <th class="border border-gray-300 px-3 py-2 text-center font-semibold text-green-800 text-sm">번호</th>
-                                    <th class="border border-gray-300 px-3 py-2 text-center font-semibold text-green-800 text-sm">학년</th>
-                                    <th class="border border-gray-300 px-3 py-2 text-center font-semibold text-green-800 text-sm">반</th>
-                                    <th class="border border-gray-300 px-3 py-2 text-center font-semibold text-green-800 text-sm">번호</th>
-                                    <th class="border border-gray-300 px-3 py-2 text-center font-semibold text-green-800 text-sm">이름</th>
-                                    <th class="border border-gray-300 px-3 py-2 text-center font-semibold text-green-800 text-sm">과목</th>
-                                    <th class="border border-gray-300 px-3 py-2 text-center font-semibold text-green-800 text-sm">결시시험</th>
-                                    <th class="border border-gray-300 px-3 py-2 text-center font-semibold text-green-800 text-sm">세부명</th>
-                                    <th class="border border-gray-300 px-3 py-2 text-center font-semibold text-green-800 text-sm">결시사유</th>
-                                    <th class="border border-gray-300 px-3 py-2 text-center font-semibold text-green-800 text-sm">기준점</th>
-                                    <th class="border border-gray-300 px-3 py-2 text-center font-semibold text-green-800 text-sm">인정점</th>
-                                    <th class="border border-gray-300 px-3 py-2 text-center font-semibold text-green-800 text-sm">삭제</th>
-                                </tr>
-                            </thead>
-                            <tbody id="results-tbody">
-                                <!-- 결과가 여기에 누적됩니다 -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
+          </div>
         </div>
+      </div>
 
-        <!-- 계산 공식 안내 -->
-        <div class="bg-white rounded-2xl shadow-xl p-8">
-            <h2 class="text-2xl font-bold text-gray-800 mb-6">📋 계산 공식 안내</h2>
-            
-            <div class="bg-yellow-50 border-2 border-yellow-200 rounded-xl p-4 mb-6">
-                <h3 class="font-semibold text-yellow-800 mb-3">🎯 결시 사유별 인정 비율</h3>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                    <div class="text-center p-3 bg-red-100 rounded-lg">
-                        <div class="font-semibold text-red-800">병결</div>
-                        <div class="text-red-600">계산된 점수의 80%</div>
-                    </div>
-                    <div class="text-center p-3 bg-blue-100 rounded-lg">
-                        <div class="font-semibold text-blue-800">인정결</div>
-                        <div class="text-blue-600">계산된 점수의 100%</div>
-                    </div>
-                    <div class="text-center p-3 bg-gray-100 rounded-lg">
-                        <div class="font-semibold text-gray-800">미인정결</div>
-                        <div class="text-gray-600">최하점 - 1점</div>
-                    </div>
-                </div>
+      <!-- 📊 평균 점수 관리 시작 -->
+      <div class="mb-8">
+        <h2 class="text-xl font-semibold text-gray-700 mb-4">📊 평균 점수 관리</h2>
+        <div class="bg-blue-50 rounded-xl p-6 mb-4">
+          <div class="flex justify-between items-center mb-4">
+            <p class="text-blue-800 text-sm"><strong>💡 안내:</strong> 입력한 평균 점수는 자동 저장됩니다.</p>
+            <button type="button" onclick="clearAllAverages()" class="bg-red-500 hover:bg-red-600 text-white px-3 py-2 rounded-lg text-sm">전체 초기화</button>
+          </div>
+          
+          <!-- 지필고사 평균 -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6" id="written-exam-averages">
+            <div class="bg-white rounded-lg p-4 border border-blue-200">
+              <h3 class="font-semibold text-blue-800 mb-2">중간고사 평균</h3>
+              <div class="flex items-center space-x-2">
+                <input type="number" step="0.1" id="saved-midterm-avg" onchange="saveAverage('midterm', this.value)" class="flex-1 px-3 py-2 border rounded-lg">
+                <button type="button" onclick="clearAverage('midterm')" class="bg-gray-400 text-white px-2 py-1 rounded text-xs">삭제</button>
+              </div>
             </div>
+            <div class="bg-white rounded-lg p-4 border border-blue-200">
+              <h3 class="font-semibold text-blue-800 mb-2">기말고사 평균</h3>
+              <div class="flex items-center space-x-2">
+                <input type="number" step="0.1" id="saved-final-avg" onchange="saveAverage('final', this.value)" class="flex-1 px-3 py-2 border rounded-lg">
+                <button type="button" onclick="clearAverage('final')" class="bg-gray-400 text-white px-2 py-1 rounded text-xs">삭제</button>
+              </div>
+            </div>
+          </div>
+          
+          <!-- 🎧 영어듣기 평균 -->
+          <div class="grid grid-cols-1 gap-4 mb-6 hidden" id="english-listening-average">
+            <div class="bg-white rounded-lg p-4 border border-orange-200">
+              <h3 class="font-semibold text-orange-800 mb-2">🎧 영어듣기 평균</h3>
+              <div class="flex items-center space-x-2">
+                <input type="number" step="0.1" id="saved-listening-avg" onchange="saveAverage('englishListening', this.value)" class="flex-1 px-3 py-2 border rounded-lg">
+                <button type="button" onclick="clearAverage('englishListening')" class="bg-gray-400 text-white px-2 py-1 rounded text-xs">삭제</button>
+              </div>
+            </div>
+          </div>
 
-            <div class="bg-green-50 border-2 border-green-200 rounded-xl p-4 mb-6">
-                <h3 class="font-semibold text-green-800 mb-3">📝 수행평가 인정점 계산 예시</h3>
-                <div class="text-sm text-green-700 space-y-2">
-                    <p><strong>상황:</strong> 국어 수행평가 A, B, C 영역 중 A영역을 결시한 경우</p>
-                    <p><strong>해당 학생의 다른 수행평가 점수:</strong> B영역 85점, C영역 90점 → 평균 87.5점</p>
-                    <p><strong>전체 학생의 다른 수행평가 평균:</strong> B영역 평균 80점, C영역 평균 82점 → 평균 81점</p>
-                    <p><strong>전체 학생의 결시한 수행평가 평균:</strong> A영역 평균 78점</p>
-                    <p><strong>계산:</strong> 87.5 × (78 ÷ 81) × 인정비율 = 84.26 × 인정비율</p>
-                </div>
+          <!-- 🎨 수행평가 평균 (음악/미술/체육) -->
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 hidden" id="performance-averages">
+            <div class="bg-white rounded-lg p-4 border border-purple-200">
+              <h3 class="font-semibold text-purple-800 mb-2">🎨 <span id="performance1-title">수행평가 1</span></h3>
+              <input type="text" id="saved-performance1-name" placeholder="영역명" onchange="savePerformanceAreaName('performance1', this.value)" class="w-full mb-2 px-3 py-2 border rounded-lg">
+              <div class="flex items-center space-x-2">
+                <input type="number" step="0.1" id="saved-performance1-avg" onchange="saveAverage('performance1', this.value)" class="flex-1 px-3 py-2 border rounded-lg">
+                <button type="button" onclick="clearPerformanceArea('performance1')" class="bg-gray-400 text-white px-2 py-1 rounded text-xs">삭제</button>
+              </div>
             </div>
-
-            <div class="space-y-6">
-                <div class="border-l-4 border-blue-500 pl-4">
-                    <h3 class="font-semibold text-blue-800 mb-2">중간고사 인정점</h3>
-                    <ul class="text-sm text-gray-600 space-y-1">
-                        <li>• 기말고사 성적 있음: (기말점수 ÷ 기말평균) × 중간평균 × 인정비율</li>
-                        <li>• 수행평가만 있음: (수행점수 ÷ 수행평균) × 중간평균 × 인정비율</li>
-                        <li>• 성적 없음: 중간고사 최하점 - 1점</li>
-                    </ul>
-                </div>
-                <div class="border-l-4 border-green-500 pl-4">
-                    <h3 class="font-semibold text-green-800 mb-2">기말고사 인정점</h3>
-                    <ul class="text-sm text-gray-600 space-y-1">
-                        <li>• 중간고사 성적 있음: (중간점수 ÷ 중간평균) × 기말평균 × 인정비율</li>
-                        <li>• 수행평가만 있음: (수행점수 ÷ 수행평균) × 기말평균 × 인정비율</li>
-                        <li>• 성적 없음: 기말고사 최하점 - 1점</li>
-                    </ul>
-                </div>
-                <div class="border-l-4 border-purple-500 pl-4">
-                    <h3 class="font-semibold text-purple-800 mb-2">수행평가 인정점</h3>
-                    <ul class="text-sm text-gray-600 space-y-1">
-                        <li>• 다른 수행평가 있음: 학생의 다른영역 평균점수 × (결시영역 전체평균 ÷ 다른영역 전체평균) × 인정비율</li>
-                        <li>• 지필평가만 있음: 학생의 지필평가점수 × (수행평가 전체평균 ÷ 지필평가 전체평균) × 인정비율</li>
-                        <li>• 성적 없음: 수행평가 최하점 - 1점</li>
-                    </ul>
-                </div>
-                <div class="border-l-4 border-orange-500 pl-4">
-                    <h3 class="font-semibold text-orange-800 mb-2">영어듣기 평가 인정점</h3>
-                    <ul class="text-sm text-gray-600 space-y-1">
-                        <li>• 지필고사 성적 있음: (학생 영어지필점수 ÷ 영어지필평균) × 영어듣기평균 × 인정비율</li>
-                        <li>• 수행평가만 있음: 학생 수행평균점수 × (영어듣기평균 ÷ 영어듣기제외 수행평균) × 인정비율</li>
-                        <li>• 성적 없음: 영어듣기 최하점 - 1점</li>
-                    </ul>
-                </div>
+            <!-- performance2 / performance3 동일 구조 (생략X, 그대로 추가) -->
+            <div class="bg-white rounded-lg p-4 border border-purple-200">
+              <h3 class="font-semibold text-purple-800 mb-2">🎨 <span id="performance2-title">수행평가 2</span></h3>
+              <input type="text" id="saved-performance2-name" placeholder="영역명" onchange="savePerformanceAreaName('performance2', this.value)" class="w-full mb-2 px-3 py-2 border rounded-lg">
+              <div class="flex items-center space-x-2">
+                <input type="number" step="0.1" id="saved-performance2-avg" onchange="saveAverage('performance2', this.value)" class="flex-1 px-3 py-2 border rounded-lg">
+                <button type="button" onclick="clearPerformanceArea('performance2')" class="bg-gray-400 text-white px-2 py-1 rounded text-xs">삭제</button>
+              </div>
             </div>
+            <div class="bg-white rounded-lg p-4 border border-purple-200">
+              <h3 class="font-semibold text-purple-800 mb-2">🎨 <span id="performance3-title">수행평가 3</span></h3>
+              <input type="text" id="saved-performance3-name" placeholder="영역명" onchange="savePerformanceAreaName('performance3', this.value)" class="w-full mb-2 px-3 py-2 border rounded-lg">
+              <div class="flex items-center space-x-2">
+                <input type="number" step="0.1" id="saved-performance3-avg" onchange="saveAverage('performance3', this.value)" class="flex-1 px-3 py-2 border rounded-lg">
+                <button type="button" onclick="clearPerformanceArea('performance3')" class="bg-gray-400 text-white px-2 py-1 rounded text-xs">삭제</button>
+              </div>
+            </div>
+          </div>
         </div>
-    </div>
+      </div>
 
-    <!-- 계산기 모달 -->
-    <div id="calculator-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
-        <div class="bg-white rounded-2xl shadow-2xl p-6 max-w-md w-full mx-4">
-            <div class="flex justify-between items-center mb-4">
-                <h3 id="calculator-title" class="text-lg font-semibold text-gray-800">평균 계산기</h3>
-                <button type="button" onclick="closeCalculator()" class="text-gray-500 hover:text-gray-700">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
-                    </svg>
-                </button>
-            </div>
-            <div id="calculator-content">
-                <!-- 동적으로 생성됩니다 -->
-            </div>
-            <div class="flex justify-end space-x-3 mt-6">
-                <button type="button" onclick="closeCalculator()" 
-                        class="px-4 py-2 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-all duration-200">
-                    취소
-                </button>
-                <button type="button" onclick="applyCalculation()" 
-                        class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all duration-200">
-                    적용
-                </button>
-            </div>
+      <!-- 👤 학생 정보 입력 -->
+      <div class="mb-8">
+        <h2 class="text-xl font-semibold text-gray-700 mb-4">👤 학생 정보</h2>
+        <div class="bg-gray-50 rounded-xl p-6">
+          <div class="grid grid-cols-3 gap-4">
+            <div><label class="block text-sm mb-1">반</label><input type="number" id="student-class" class="w-full px-3 py-2 border rounded-lg"></div>
+            <div><label class="block text-sm mb-1">번호</label><input type="number" id="student-number" class="w-full px-3 py-2 border rounded-lg"></div>
+            <div><label class="block text-sm mb-1">이름</label><input type="text" id="student-name" class="w-full px-3 py-2 border rounded-lg"></div>
+          </div>
         </div>
-    </div>
+      </div>
 
-    <script>
-        let currentExamType = '';
-        let currentMethod = '';
-        let currentAbsenceReason = '';
-        let isPerformanceOnlySubject = false;
-        let resultCounter = 0;
-        let resultsData = [];
-        let currentCalculatorTarget = '';
-        let currentCalculatorType = '';
-        let calculatorScores = [];
-        
-        // 저장된 평균 점수들
-        let savedAverages = {
-            midterm: null,
-            final: null,
-            performance: {},
-            englishListening: null,
-            performance1: null,
-            performance2: null,
-            performance3: null
-        };
-        
-        // 저장된 수행평가 영역명들
-        let savedPerformanceAreaNames = {
-            performance1: null,
-            performance2: null,
-            performance3: null
-        };
+      <!-- 결시시험 유형 -->
+      <div id="exam-type-section" class="mb-8">
+        <label class="block text-lg font-semibold mb-4">결시한 시험 유형</label>
+        <div id="exam-type-buttons" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <button type="button" onclick="selectExamType('midterm')" id="midterm-btn" class="btn-hover bg-blue-100 px-6 py-4 rounded-xl">중간고사</button>
+          <button type="button" onclick="selectExamType('final')" id="final-btn" class="btn-hover bg-green-100 px-6 py-4 rounded-xl">기말고사</button>
+          <button type="button" onclick="selectExamType('performance')" id="performance-btn" class="btn-hover bg-purple-100 px-6 py-4 rounded-xl">수행평가</button>
+          <button type="button" onclick="selectExamType('english-listening')" id="english-listening-btn" class="btn-hover bg-orange-100 px-6 py-4 rounded-xl hidden">영어듣기</button>
+        </div>
+      </div>
 
+      <!-- 결시 사유 -->
+      <div id="absence-reason" class="mb-8 hidden">
+        <label class="block text-lg font-semibold mb-4">결시 사유</label>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <button type="button" onclick="selectAbsenceReason('sick')" id="sick-btn" class="btn-hover bg-red-100 px-6 py-4 rounded-xl">병결</button>
+          <button type="button" onclick="selectAbsenceReason('approved')" id="approved-btn" class="btn-hover bg-blue-100 px-6 py-4 rounded-xl">인정결</button>
+          <button type="button" onclick="selectAbsenceReason('unapproved')" id="unapproved-btn" class="btn-hover bg-gray-100 px-6 py-4 rounded-xl">미인정결</button>
+        </div>
+      </div>
 
+      <!-- 계산 방식 선택 -->
+      <div id="calculation-method" class="mb-8 hidden">
+        <label class="block text-lg font-semibold mb-4">계산 방식 선택</label>
+        <div id="method-options" class="space-y-3"></div>
+      </div>
 
-        function handleSubjectChange() {
-            const subject = document.getElementById('student-subject').value;
-            const performanceOnlySubjects = ['음악', '미술', '체육'];
-            
-            isPerformanceOnlySubject = performanceOnlySubjects.includes(subject);
-            
-            const midtermBtn = document.getElementById('midterm-btn');
-            const finalBtn = document.getElementById('final-btn');
-            const englishListeningBtn = document.getElementById('english-listening-btn');
-            const performanceNotice = document.getElementById('performance-only-notice');
-            const englishNotice = document.getElementById('english-listening-notice');
-            const examTypeButtons = document.getElementById('exam-type-buttons');
-            const englishListeningAverage = document.getElementById('english-listening-average');
-            const writtenExamAverages = document.getElementById('written-exam-averages');
-            const performanceAverages = document.getElementById('performance-averages');
-            
-            // 영어듣기 관련 표시/숨김
-            if (subject === '영어') {
-                englishListeningBtn.classList.remove('hidden');
-                englishNotice.classList.remove('hidden');
-                englishListeningAverage.classList.remove('hidden');
-                examTypeButtons.className = 'grid grid-cols-1 md:grid-cols-4 gap-4';
-            } else {
-                englishListeningBtn.classList.add('hidden');
-                englishNotice.classList.add('hidden');
-                englishListeningAverage.classList.add('hidden');
-                examTypeButtons.className = 'grid grid-cols-1 md:grid-cols-3 gap-4';
-            }
-            
-            // 평균 점수 관리 영역 표시/숨김
-            if (isPerformanceOnlySubject) {
-                writtenExamAverages.classList.add('hidden');
-                performanceAverages.classList.remove('hidden');
-                midtermBtn.disabled = true;
-                finalBtn.disabled = true;
-                midtermBtn.classList.add('opacity-50', 'cursor-not-allowed');
-                finalBtn.classList.add('opacity-50', 'cursor-not-allowed');
-                performanceNotice.classList.remove('hidden');
-                selectExamType('performance');
-            } else {
-                writtenExamAverages.classList.remove('hidden');
-                performanceAverages.classList.add('hidden');
-                midtermBtn.disabled = false;
-                finalBtn.disabled = false;
-                midtermBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-                finalBtn.classList.remove('opacity-50', 'cursor-not-allowed');
-                performanceNotice.classList.add('hidden');
-                resetExamTypeSelection();
-            }
-            
+      <!-- 입력 폼 -->
+      <div id="input-form" class="mb-8 hidden">
+        <div class="bg-gray-50 rounded-xl p-6">
+          <h3 class="text-lg font-semibold mb-4">필요한 정보를 입력하세요</h3>
+          <div id="input-fields" class="space-y-4"></div>
+          <button type="button" onclick="calculateScore()" class="w-full mt-6 bg-gradient-to-r from-blue-600 to-indigo-600 text-white py-3 rounded-xl">인정점 계산하기</button>
+        </div>
+      </div>
 
+      <!-- 결과 테이블 -->
+      <div id="result" class="hidden">
+        <div class="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-6">
+          <div class="flex justify-between items-center mb-4">
+            <h3 class="text-xl font-semibold text-green-800">📊 계산 결과</h3>
+            <div class="space-x-2">
+              <button onclick="copyResults()" class="bg-purple-500 text-white px-4 py-2 rounded-lg">복사하기</button>
+              <button onclick="downloadXLSX()" class="bg-green-500 text-white px-4 py-2 rounded-lg">Excel 저장</button>
+              <button onclick="clearResults()" class="bg-red-500 text-white px-4 py-2 rounded-lg">전체 삭제</button>
+            </div>
+          </div>
+          <div class="overflow-x-auto">
+            <table id="results-table" class="w-full border-collapse border">
+              <thead>
+                <tr class="bg-green-100">
+                  <th class="border px-3 py-2">번호</th>
+                  <th class="border px-3 py-2">학년</th>
+                  <th class="border px-3 py-2">반</th>
+                  <th class="border px-3 py-2">번호</th>
+                  <th class="border px-3 py-2">이름</th>
+                  <th class="border px-3 py-2">과목</th>
+                  <th class="border px-3 py-2">결시시험</th>
+                  <th class="border px-3 py-2">세부명</th>
+                  <th class="border px-3 py-2">결시사유</th>
+                  <th class="border px-3 py-2">인정비율</th>
+                  <th class="border px-3 py-2">산출기준</th>
+                  <th class="border px-3 py-2">기준점</th>
+                  <th class="border px-3 py-2">인정점</th>
+                  <th
+  <!-- 📋 계산 공식 안내 모달 -->
+  <div id="formula-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+      <div class="bg-white rounded-2xl shadow-2xl p-6 max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+          <div class="flex justify-between items-center mb-6">
+              <h3 class="text-2xl font-bold text-gray-800">📋 계산 공식 안내</h3>
+              <button type="button" onclick="closeFormulaModal()" class="text-gray-500 hover:text-gray-700">
+                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                  </svg>
+              </button>
+          </div>
+
+          <!-- 👉 중간 안내 내용: 병결/인정결/미인정결 공식, 수행평가 예시 등 기존 코드 동일 -->
+          <!-- ... 그대로 있었던 안내 내용 다 두시면 됩니다 ... -->
+
+          <div class="flex justify-end mt-6">
+              <button type="button" onclick="closeFormulaModal()" 
+                      class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg">
+                  확인
+              </button>
+          </div>
+      </div>
+  </div>
+
+  <!-- 📐 계산기 모달 -->
+  <div id="calculator-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+      <div class="bg-white rounded-2xl shadow-2xl p-6 max-w-md w-full mx-4">
+          <div class="flex justify-between items-center mb-4">
+              <h3 id="calculator-title" class="text-lg font-semibold text-gray-800">평균 계산기</h3>
+              <button type="button" onclick="closeCalculator()" class="text-gray-500 hover:text-gray-700">
+                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                  </svg>
+              </button>
+          </div>
+          <div id="calculator-content"><!-- 동적 생성 --></div>
+          <div class="flex justify-end space-x-3 mt-6">
+              <button type="button" onclick="closeCalculator()" class="px-4 py-2 bg-gray-100 rounded-lg">취소</button>
+              <button type="button" onclick="applyCalculation()" class="px-4 py-2 bg-blue-600 text-white rounded-lg">적용</button>
+          </div>
+      </div>
+  </div>
+
+  <!-- ✅ SCRIPT -->
+  <script>
+    /* 여기서부터는 당신이 올려 주신 긴 JS 코드 전체가 들어갑니다.
+       (handleSubjectChange, resetExamTypeSelection, selectExamType, selectAbsenceReason,
+        showCalculationMethods, selectMethod, showInputForm, calculateScore,
+        addResultToTable, deleteResult, clearResults, copyResults,
+        resetForm, openCalculator, closeCalculator,
+        updatePerformanceAvg, updateStudentPerformanceAvg, 등등 모든 유틸리티 함수 포함) */
+
+    // ✅ 마지막에 Excel 저장 함수 하나만 추가하면 됩니다.
+    function downloadXLSX() {
+        if (resultsData.length === 0) {
+            alert('저장할 데이터가 없습니다.');
+            return;
         }
 
-        function resetExamTypeSelection() {
-            currentExamType = '';
-            currentMethod = '';
-            currentAbsenceReason = '';
-            
-            document.querySelectorAll('.btn-hover').forEach(btn => {
-                btn.classList.remove('selected');
-            });
-            
-            document.getElementById('absence-reason').classList.add('hidden');
-            document.getElementById('calculation-method').classList.add('hidden');
-            document.getElementById('input-form').classList.add('hidden');
-        }
+        const headers = [
+            '번호','학년','반','학번','이름','과목',
+            '결시시험','세부명','결시사유','인정비율',
+            '산출기준','기준점','인정점','비고'
+        ];
+        const rows = resultsData.map(data => [
+            data.id,
+            data.grade,
+            data.class,
+            data.number,
+            data.name,
+            data.subject,
+            data.examType,
+            data.detailName,
+            data.absenceReason,
+            data.recognitionRate,
+            data.calculationBasis,
+            Number(data.baseScore),
+            Number(data.finalScore),
+            data.remarks
+        ]);
 
-        function selectExamType(type) {
-            if (isPerformanceOnlySubject && (type === 'midterm' || type === 'final')) {
-                return;
-            }
-            
-            currentExamType = type;
-            
-            document.querySelectorAll('.btn-hover').forEach(btn => {
-                btn.classList.remove('selected');
-            });
-            
-            const selectedBtn = document.getElementById(type + '-btn');
-            selectedBtn.classList.add('selected');
+        const worksheet = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+        worksheet['!cols'] = headers.map(h => ({ wch: Math.max(10, h.length + 2) }));
 
-            document.getElementById('absence-reason').classList.remove('hidden');
-            document.getElementById('calculation-method').classList.add('hidden');
-            document.getElementById('input-form').classList.add('hidden');
-        }
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "결과");
 
-        function selectAbsenceReason(reason) {
-            currentAbsenceReason = reason;
-            
-            document.querySelectorAll('#absence-reason .btn-hover').forEach(btn => {
-                btn.classList.remove('selected');
-            });
-            
-            const selectedBtn = document.getElementById(reason + '-btn');
-            selectedBtn.classList.add('selected');
-
-            showCalculationMethods(currentExamType);
-        }
-
-        function showCalculationMethods(type) {
-            const methodDiv = document.getElementById('calculation-method');
-            const optionsDiv = document.getElementById('method-options');
-            
-            if (currentAbsenceReason === 'unapproved') {
-                methodDiv.classList.add('hidden');
-                currentMethod = 'no-score';
-                showInputForm(type, 'no-score');
-                return;
-            }
-            
-            methodDiv.classList.remove('hidden');
-            optionsDiv.innerHTML = '';
-
-            let methods = [];
-            
-            if (type === 'midterm') {
-                methods = [
-                    { id: 'final-score', label: '기말고사 성적 있음', desc: '기말고사 점수로 중간고사 인정점 계산' },
-                    { id: 'performance-only', label: '수행평가 성적 있음', desc: '수행평가 점수로 중간고사 인정점 계산' },
-                    { id: 'no-score', label: '성적 없음', desc: '중간고사 최하점-1점 적용' }
-                ];
-            } else if (type === 'final') {
-                methods = [
-                    { id: 'midterm-score', label: '중간고사 성적 있음', desc: '중간고사 점수로 기말고사 인정점 계산' },
-                    { id: 'performance-only', label: '수행평가 성적 있음', desc: '수행평가 점수로 기말고사 인정점 계산' },
-                    { id: 'no-score', label: '성적 없음', desc: '기말고사 최하점-1점 적용' }
-                ];
-            } else if (type === 'english-listening') {
-                methods = [
-                    { id: 'written-exam', label: '지필고사 성적 있음', desc: '영어 지필평가 점수로 계산' },
-                    { id: 'performance-only', label: '수행평가만 있음', desc: '다른 수행평가 점수로 계산' },
-                    { id: 'no-score', label: '성적 없음', desc: '영어듣기 최하점-1점 적용' }
-                ];
-            } else {
-                if (isPerformanceOnlySubject) {
-                    methods = [
-                        { id: 'other-performance', label: '다른 수행평가 점수 있음', desc: '다른 영역 수행평가로 계산' },
-                        { id: 'no-score', label: '성적 없음', desc: '수행평가 최하점-1점 적용' }
-                    ];
-                } else {
-                    methods = [
-                        { id: 'other-performance', label: '다른 수행평가 점수 있음', desc: '다른 영역 수행평가로 계산' },
-                        { id: 'written-exam', label: '지필평가 점수 있음', desc: '중간/기말고사 점수로 계산' },
-                        { id: 'no-score', label: '성적 없음', desc: '수행평가 최하점-1점 적용' }
-                    ];
-                }
-            }
-
-            // 우선순위 안내 추가
-            const priorityNotice = document.createElement('div');
-            priorityNotice.className = 'mb-4 bg-yellow-50 border border-yellow-200 rounded-lg p-3';
-            priorityNotice.innerHTML = `
-                <p class="text-sm text-yellow-800">
-                    <strong>💡 우선순위:</strong> 1번 → 2번 → 3번 순서로 적용해야 합니다.
-                </p>
-            `;
-            optionsDiv.appendChild(priorityNotice);
-
-            methods.forEach((method, index) => {
-                const methodBtn = document.createElement('div');
-                methodBtn.className = 'method-option border-2 border-gray-200 rounded-lg p-4 cursor-pointer hover:border-blue-300 hover:bg-blue-50 transition-all duration-200';
-                methodBtn.onclick = () => selectMethod(method.id);
-                methodBtn.innerHTML = `
-                    <div class="flex items-center">
-                        <div class="flex-shrink-0 w-8 h-8 bg-blue-100 text-blue-800 rounded-full flex items-center justify-center font-bold text-sm mr-3">
-                            ${index + 1}
-                        </div>
-                        <div>
-                            <div class="font-medium text-gray-800">${method.label}</div>
-                            <div class="text-sm text-gray-600">${method.desc}</div>
-                        </div>
-                    </div>
-                `;
-                optionsDiv.appendChild(methodBtn);
-            });
-        }
-
-        function selectMethod(method) {
-            currentMethod = method;
-            
-            document.querySelectorAll('.method-option').forEach(option => {
-                option.classList.remove('border-blue-500', 'bg-blue-50');
-                option.classList.add('border-gray-200');
-            });
-            
-            event.currentTarget.classList.add('border-blue-500', 'bg-blue-50');
-            event.currentTarget.classList.remove('border-gray-200');
-
-            showInputForm(currentExamType, method);
-        }
-
-        function showInputForm(examType, method) {
-            const formDiv = document.getElementById('input-form');
-            const fieldsDiv = document.getElementById('input-fields');
-            
-            formDiv.classList.remove('hidden');
-            fieldsDiv.innerHTML = '';
-
-            let fields = [];
-
-            if (examType === 'english-listening') {
-                if (method === 'written-exam') {
-                    fields = [
-                        { id: 'student-written-score', label: '해당 학생의 영어 지필평가 점수', placeholder: '예: 85', hasCalculator: true, calculatorType: 'student-written' },
-                        { id: 'written-avg', label: '전체 학생의 영어 지필평가 평균', placeholder: '예: 78.2', hasCalculator: true, calculatorType: 'written-avg' },
-                        { id: 'listening-avg', label: '전체 학생의 영어듣기평가 평균 점수', placeholder: '예: 82.5' }
-                    ];
-                } else if (method === 'performance-only') {
-                    fields = [
-                        { id: 'student-perf-score', label: '해당 학생의 영어 수행평가 평균점수', placeholder: '예: 88', hasCalculator: true, calculatorType: 'student-performance' },
-                        { id: 'listening-avg', label: '전체 학생의 영어듣기평가 평균 점수', placeholder: '예: 82.5' },
-                        { id: 'perf-excluding-listening-avg', label: '영어듣기 제외한 수행평가 영역의 평균점수', placeholder: '예: 85.3', hasCalculator: true, calculatorType: 'performance-avg' }
-                    ];
-                } else if (method === 'no-score') {
-                    fields = [
-                        { id: 'listening-min', label: '영어듣기 평가 최하점', placeholder: '예: 40' }
-                    ];
-                }
-            } else if (examType === 'midterm') {
-                if (method === 'final-score') {
-                    fields = [
-                        { id: 'midterm-avg', label: '중간고사 평균', placeholder: '예: 75.5' },
-                        { id: 'final-score', label: '기말고사 점수', placeholder: '예: 85' },
-                        { id: 'final-avg', label: '기말고사 평균', placeholder: '예: 78.2' }
-                    ];
-                } else if (method === 'performance-only') {
-                    fields = [
-                        { id: 'midterm-avg', label: '중간고사 평균', placeholder: '예: 75.5' },
-                        { id: 'performance-score', label: '수행평가 점수', placeholder: '예: 88', hasCalculator: true, calculatorType: 'student-performance' },
-                        { id: 'performance-avg', label: '수행평가 평균', placeholder: '예: 82.3', hasCalculator: true, calculatorType: 'performance-avg' }
-                    ];
-                } else if (method === 'no-score') {
-                    fields = [
-                        { id: 'midterm-min', label: '중간고사 최하점', placeholder: '예: 40' }
-                    ];
-                }
-            } else if (examType === 'final') {
-                if (method === 'midterm-score') {
-                    fields = [
-                        { id: 'final-avg', label: '기말고사 평균', placeholder: '예: 78.2' },
-                        { id: 'midterm-score', label: '중간고사 점수', placeholder: '예: 82' },
-                        { id: 'midterm-avg', label: '중간고사 평균', placeholder: '예: 75.5' }
-                    ];
-                } else if (method === 'performance-only') {
-                    fields = [
-                        { id: 'final-avg', label: '기말고사 평균', placeholder: '예: 78.2' },
-                        { id: 'performance-score', label: '수행평가 점수', placeholder: '예: 88', hasCalculator: true, calculatorType: 'student-performance' },
-                        { id: 'performance-avg', label: '수행평가 평균', placeholder: '예: 82.3', hasCalculator: true, calculatorType: 'performance-avg' }
-                    ];
-                } else if (method === 'no-score') {
-                    fields = [
-                        { id: 'final-min', label: '기말고사 최하점', placeholder: '예: 40' }
-                    ];
-                }
-            } else if (examType === 'performance') {
-                if (method === 'other-performance') {
-                    fields = [
-                        { id: 'student-performance-areas', label: '해당 학생의 다른 수행평가 점수들', placeholder: '학생이 응시한 영역들의 점수', hasCalculator: true, calculatorType: 'student-performance-areas', description: '결시하지 않은 다른 수행평가 영역에서 해당 학생이 받은 점수들 (자동 평균 계산)' },
-                        { id: 'class-performance-areas', label: '전체 학생의 다른 수행평가 평균들', placeholder: '전체 학생들의 해당 영역 평균점수', hasCalculator: true, calculatorType: 'class-performance-areas', description: '결시하지 않은 다른 수행평가 영역에서 전체 학생들의 평균점수들 (자동 평균 계산)' },
-                        { id: 'absent-performance-avg', label: '전체 학생의 결시한 수행평가 평균', placeholder: '예: 82.3', description: '결시한 수행평가 영역에서 전체 학생들의 평균점수' },
-                        { id: 'absent-performance-name', label: '결시한 수행평가 영역명', placeholder: '예: 포트폴리오', type: 'text', description: '학생이 결시한 수행평가 영역의 이름' }
-                    ];
-                } else if (method === 'written-exam') {
-                    fields = [
-                        { id: 'midterm-score', label: '해당 학생의 중간고사 점수', placeholder: '예: 82 (없으면 0)', description: '해당 학생이 중간고사에서 받은 점수 (응시하지 않았으면 0 입력)' },
-                        { id: 'midterm-avg', label: '전체 학생의 중간고사 평균', placeholder: '예: 75.5 (없으면 0)', description: '전체 학생들의 중간고사 평균점수 (실시하지 않았으면 0 입력)' },
-                        { id: 'final-score', label: '해당 학생의 기말고사 점수', placeholder: '예: 85 (없으면 0)', description: '해당 학생이 기말고사에서 받은 점수 (응시하지 않았으면 0 입력)' },
-                        { id: 'final-avg', label: '전체 학생의 기말고사 평균', placeholder: '예: 78.2 (없으면 0)', description: '전체 학생들의 기말고사 평균점수 (실시하지 않았으면 0 입력)' },
-                        { id: 'absent-performance-avg', label: '전체 학생의 결시한 수행평가 평균', placeholder: '예: 82.3', description: '결시한 수행평가 영역에서 전체 학생들의 평균점수' },
-                        { id: 'absent-performance-name', label: '결시한 수행평가 영역명', placeholder: '예: 포트폴리오', type: 'text', description: '학생이 결시한 수행평가 영역의 이름' }
-                    ];
-                } else if (method === 'no-score') {
-                    fields = [
-                        { id: 'performance-min', label: '수행평가 최하점', placeholder: '예: 40' },
-                        { id: 'absent-performance-name', label: '결시한 수행평가 영역명', placeholder: '예: 포트폴리오', type: 'text' }
-                    ];
-                }
-            }
-
-            fields.forEach(field => {
-                const fieldDiv = document.createElement('div');
-                const inputType = field.type === 'text' ? 'text' : 'number';
-                const stepAttr = field.type === 'text' ? '' : 'step="0.1"';
-                
-                let calculatorButton = '';
-                if (field.hasCalculator) {
-                    calculatorButton = `
-                        <button type="button" onclick="openCalculator('${field.id}', '${field.calculatorType}')" 
-                                class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200">
-                            계산기
-                        </button>
-                    `;
-                }
-                
-                let descriptionHtml = '';
-                if (field.description) {
-                    descriptionHtml = `<p class="text-xs text-gray-500 mt-1">${field.description}</p>`;
-                }
-                
-                fieldDiv.innerHTML = `
-                    <label class="block text-sm font-medium text-gray-700 mb-2">${field.label}</label>
-                    <div class="flex items-center">
-                        <input type="${inputType}" ${stepAttr} id="${field.id}" placeholder="${field.placeholder}" 
-                               class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200">
-                        ${calculatorButton}
-                    </div>
-                    ${descriptionHtml}
-                `;
-                fieldsDiv.appendChild(fieldDiv);
-                
-                // 저장된 평균값 자동 입력
-                const input = fieldDiv.querySelector('input');
-                if (field.id === 'midterm-avg' && savedAverages.midterm) {
-                    input.value = savedAverages.midterm;
-                } else if (field.id === 'final-avg' && savedAverages.final) {
-                    input.value = savedAverages.final;
-                } else if (field.id === 'listening-avg' && savedAverages.englishListening) {
-                    input.value = savedAverages.englishListening;
-                } else if (field.id === 'written-avg' && savedAverages.midterm && savedAverages.final) {
-                    // 영어듣기 지필평가 평균 자동 계산
-                    const writtenAvg = (savedAverages.midterm + savedAverages.final) / 2;
-                    input.value = writtenAvg.toFixed(2);
-                }
-                
-                // 평균값 변경 시 자동 저장
-                if (field.id === 'midterm-avg') {
-                    input.addEventListener('change', function() {
-                        if (this.value) saveAverage('midterm', this.value);
-                    });
-                } else if (field.id === 'final-avg') {
-                    input.addEventListener('change', function() {
-                        if (this.value) saveAverage('final', this.value);
-                    });
-                } else if (field.id === 'listening-avg') {
-                    input.addEventListener('change', function() {
-                        if (this.value) saveAverage('englishListening', this.value);
-                    });
-                } else if (field.id === 'absent-performance-avg') {
-                    input.addEventListener('change', function() {
-                        const subject = document.getElementById('student-subject').value;
-                        const areaName = document.getElementById('absent-performance-name')?.value;
-                        if (subject && areaName && this.value) {
-                            savePerformanceAverage(subject, areaName, this.value);
-                        }
-                    });
-                } else if (field.id === 'absent-performance-name') {
-                    input.addEventListener('change', function() {
-                        const subject = document.getElementById('student-subject').value;
-                        const avgValue = document.getElementById('absent-performance-avg')?.value;
-                        if (subject && this.value && avgValue) {
-                            savePerformanceAverage(subject, this.value, avgValue);
-                        }
-                        // 기존 저장된 값이 있으면 자동 입력
-                        if (subject && this.value && savedAverages.performance[subject] && savedAverages.performance[subject][this.value]) {
-                            document.getElementById('absent-performance-avg').value = savedAverages.performance[subject][this.value];
-                        }
-                    });
-                }
-            });
-        }
-
-        function calculateScore() {
-            let result = 0;
-            let reasonText = '';
-            
-            // 결시 사유별 인정 비율
-            let recognitionRate = 1.0;
-            if (currentAbsenceReason === 'sick') {
-                recognitionRate = 0.8;
-                reasonText = '병결';
-            } else if (currentAbsenceReason === 'approved') {
-                recognitionRate = 1.0;
-                reasonText = '인정결';
-            } else if (currentAbsenceReason === 'unapproved') {
-                reasonText = '미인정결';
-            }
-            
-            try {
-                // 성적 없음 처리 (모든 결시 사유에 대해)
-                if (currentMethod === 'no-score') {
-                    let minScore = 0;
-                    if (currentExamType === 'midterm') {
-                        minScore = parseFloat(document.getElementById('midterm-min')?.value);
-                    } else if (currentExamType === 'final') {
-                        minScore = parseFloat(document.getElementById('final-min')?.value);
-                    } else if (currentExamType === 'performance') {
-                        minScore = parseFloat(document.getElementById('performance-min')?.value);
-                    } else if (currentExamType === 'english-listening') {
-                        minScore = parseFloat(document.getElementById('listening-min')?.value);
-                    }
-                    
-                    if (isNaN(minScore) || minScore <= 0) {
-                        alert('최하점을 올바르게 입력해주세요.');
-                        return;
-                    }
-                    
-                    // 성적 없음의 경우 기준점과 인정점을 별도로 처리
-                    const baseScore = minScore;
-                    const finalScore = minScore - 1;
-                    addResultToTable(baseScore, finalScore, reasonText);
-                    resetForm();
-                    return;
-                } else {
-                    // 일반적인 계산
-                    if (currentExamType === 'english-listening') {
-                        if (currentMethod === 'written-exam') {
-                            const studentWrittenScore = parseFloat(document.getElementById('student-written-score').value);
-                            const writtenAvg = parseFloat(document.getElementById('written-avg').value);
-                            const listeningAvg = parseFloat(document.getElementById('listening-avg').value);
-                            
-                            const calculatedScore = (studentWrittenScore / writtenAvg) * listeningAvg;
-                            result = calculatedScore * recognitionRate;
-                        } else if (currentMethod === 'performance-only') {
-                            const studentPerfScore = parseFloat(document.getElementById('student-perf-score').value);
-                            const listeningAvg = parseFloat(document.getElementById('listening-avg').value);
-                            const perfExcludingListeningAvg = parseFloat(document.getElementById('perf-excluding-listening-avg').value);
-                            
-                            const calculatedScore = studentPerfScore * (listeningAvg / perfExcludingListeningAvg);
-                            result = calculatedScore * recognitionRate;
-                        }
-                    } else if (currentExamType === 'midterm') {
-                        if (currentMethod === 'final-score') {
-                            const midtermAvg = parseFloat(document.getElementById('midterm-avg').value);
-                            const finalScore = parseFloat(document.getElementById('final-score').value);
-                            const finalAvg = parseFloat(document.getElementById('final-avg').value);
-                            
-                            const calculatedScore = (finalScore / finalAvg) * midtermAvg;
-                            result = calculatedScore * recognitionRate;
-                        } else if (currentMethod === 'performance-only') {
-                            const midtermAvg = parseFloat(document.getElementById('midterm-avg').value);
-                            const performanceScore = parseFloat(document.getElementById('performance-score').value);
-                            const performanceAvg = parseFloat(document.getElementById('performance-avg').value);
-                            
-                            const calculatedScore = (performanceScore / performanceAvg) * midtermAvg;
-                            result = calculatedScore * recognitionRate;
-                        }
-                    } else if (currentExamType === 'final') {
-                        if (currentMethod === 'midterm-score') {
-                            const finalAvg = parseFloat(document.getElementById('final-avg').value);
-                            const midtermScore = parseFloat(document.getElementById('midterm-score').value);
-                            const midtermAvg = parseFloat(document.getElementById('midterm-avg').value);
-                            
-                            const calculatedScore = (midtermScore / midtermAvg) * finalAvg;
-                            result = calculatedScore * recognitionRate;
-                        } else if (currentMethod === 'performance-only') {
-                            const finalAvg = parseFloat(document.getElementById('final-avg').value);
-                            const performanceScore = parseFloat(document.getElementById('performance-score').value);
-                            const performanceAvg = parseFloat(document.getElementById('performance-avg').value);
-                            
-                            const calculatedScore = (performanceScore / performanceAvg) * finalAvg;
-                            result = calculatedScore * recognitionRate;
-                        }
-                    } else if (currentExamType === 'performance') {
-                        if (currentMethod === 'other-performance') {
-                            // 1) 다른 영역의 수행평가 점수가 있는 경우
-                            // 기준점수 = 해당 학생의 B,C 평균점수 * (전체 학생의 A 평균점수 / 전체 학생의 B,C 평균점수)
-                            const studentOtherPerformanceAvg = parseFloat(document.getElementById('student-performance-areas').value);
-                            const classOtherPerformanceAvg = parseFloat(document.getElementById('class-performance-areas').value);
-                            const absentPerformanceAvg = parseFloat(document.getElementById('absent-performance-avg').value);
-                            
-                            const calculatedScore = studentOtherPerformanceAvg * (absentPerformanceAvg / classOtherPerformanceAvg);
-                            result = calculatedScore * recognitionRate;
-                        } else if (currentMethod === 'written-exam') {
-                            // 2) 수행평가 점수가 없는 경우
-                            // 기준점수 = 해당 학생의 지필평가 점수 * (전체 학생의 수행평가 평균 / 전체 학생의 지필평가 평균)
-                            const midtermScore = parseFloat(document.getElementById('midterm-score').value) || 0;
-                            const midtermAvg = parseFloat(document.getElementById('midterm-avg').value) || 0;
-                            const finalScore = parseFloat(document.getElementById('final-score').value) || 0;
-                            const finalAvg = parseFloat(document.getElementById('final-avg').value) || 0;
-                            const absentPerformanceAvg = parseFloat(document.getElementById('absent-performance-avg').value);
-                            
-                            // 학생의 지필평가 점수 계산 (중간+기말 평균 또는 있는 것만)
-                            let studentWrittenScore = 0;
-                            let classWrittenAvg = 0;
-                            
-                            if (midtermScore > 0 && finalScore > 0) {
-                                studentWrittenScore = (midtermScore + finalScore) / 2;
-                                classWrittenAvg = (midtermAvg + finalAvg) / 2;
-                            } else if (midtermScore > 0) {
-                                studentWrittenScore = midtermScore;
-                                classWrittenAvg = midtermAvg;
-                            } else if (finalScore > 0) {
-                                studentWrittenScore = finalScore;
-                                classWrittenAvg = finalAvg;
-                            }
-                            
-                            const calculatedScore = studentWrittenScore * (absentPerformanceAvg / classWrittenAvg);
-                            result = calculatedScore * recognitionRate;
-                        }
-                    }
-                }
-
-                result = Math.round(result * 100) / 100;
-                
-                // 기준점과 최종 인정점 계산
-                const baseScore = result;
-                const finalScore = result > 100 ? 100 : result;
-                
-                addResultToTable(baseScore, finalScore, reasonText);
-                resetForm();
-                
-            } catch (error) {
-                alert('입력값을 확인해주세요. 모든 필수 항목을 올바르게 입력해야 합니다.');
-            }
-        }
-
-        function addResultToTable(baseScore, finalScore, reasonText) {
-            const studentGrade = document.getElementById('student-grade').value || '-';
-            const studentClass = document.getElementById('student-class').value || '-';
-            const studentNumber = document.getElementById('student-number').value || '-';
-            const studentName = document.getElementById('student-name').value || '-';
-            const studentSubject = document.getElementById('student-subject').value || '-';
-            
-            const examTypeText = currentExamType === 'midterm' ? '지필고사' : 
-                               currentExamType === 'final' ? '지필고사' : 
-                               currentExamType === 'english-listening' ? '수행평가' : '수행평가';
-            
-            let detailName = '';
-            if (currentExamType === 'midterm') {
-                detailName = '중간고사';
-            } else if (currentExamType === 'final') {
-                detailName = '기말고사';
-            } else if (currentExamType === 'english-listening') {
-                detailName = '영어듣기';
-            } else if (currentExamType === 'performance') {
-                detailName = document.getElementById('absent-performance-name')?.value || '수행평가';
-            }
-            
-            resultCounter++;
-            
-            const resultData = {
-                id: resultCounter,
-                grade: studentGrade,
-                class: studentClass,
-                number: studentNumber,
-                name: studentName,
-                subject: studentSubject,
-                examType: examTypeText,
-                detailName: detailName,
-                absenceReason: reasonText,
-                baseScore: baseScore.toFixed(2),
-                finalScore: finalScore.toFixed(2)
-            };
-            resultsData.push(resultData);
-            
-            const tbody = document.getElementById('results-tbody');
-            const row = document.createElement('tr');
-            row.className = 'hover:bg-gray-50';
-            row.id = `result-row-${resultCounter}`;
-            
-            const reasonClass = currentAbsenceReason === 'sick' ? 'bg-red-100 text-red-800' :
-                              currentAbsenceReason === 'approved' ? 'bg-blue-100 text-blue-800' :
-                              'bg-gray-100 text-gray-800';
-            
-            // 기준점과 인정점 표시 스타일 결정
-            const baseScoreDisplay = baseScore > 100 ? 
-                `<span class="text-orange-600 font-bold">${baseScore.toFixed(2)}점</span>` : 
-                `<span class="text-blue-600">${baseScore.toFixed(2)}점</span>`;
-            
-            const finalScoreDisplay = baseScore > 100 ? 
-                `<span class="text-green-800 font-bold">100.00점</span>` : 
-                `<span class="text-green-800 font-bold">${finalScore.toFixed(2)}점</span>`;
-            
-            row.innerHTML = `
-                <td class="border border-gray-300 px-3 py-2 text-center text-sm">${resultCounter}</td>
-                <td class="border border-gray-300 px-3 py-2 text-center text-sm">${studentGrade}</td>
-                <td class="border border-gray-300 px-3 py-2 text-center text-sm">${studentClass}</td>
-                <td class="border border-gray-300 px-3 py-2 text-center text-sm">${studentNumber}</td>
-                <td class="border border-gray-300 px-3 py-2 text-center text-sm">${studentName}</td>
-                <td class="border border-gray-300 px-3 py-2 text-center text-sm">${studentSubject}</td>
-                <td class="border border-gray-300 px-3 py-2 text-center text-sm">${examTypeText}</td>
-                <td class="border border-gray-300 px-3 py-2 text-center text-sm">${detailName}</td>
-                <td class="border border-gray-300 px-3 py-2 text-center text-sm">
-                    <span class="px-2 py-1 rounded text-xs font-medium ${reasonClass}">
-                        ${reasonText}
-                    </span>
-                </td>
-                <td class="border border-gray-300 px-3 py-2 text-center text-sm">${baseScoreDisplay}</td>
-                <td class="border border-gray-300 px-3 py-2 text-center text-sm">${finalScoreDisplay}</td>
-                <td class="border border-gray-300 px-3 py-2 text-center text-sm">
-                    <button type="button" onclick="deleteResult(${resultCounter})" class="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded text-xs transition-all duration-200">
-                        삭제
-                    </button>
-                </td>
-            `;
-            
-            tbody.appendChild(row);
-            
-            const resultDiv = document.getElementById('result');
-            resultDiv.classList.remove('hidden');
-            resultDiv.scrollIntoView({ behavior: 'smooth' });
-        }
-
-        function deleteResult(id) {
-            resultsData = resultsData.filter(data => data.id !== id);
-            
-            const row = document.getElementById(`result-row-${id}`);
-            if (row) {
-                row.remove();
-            }
-            
-            if (resultsData.length === 0) {
-                document.getElementById('result').classList.add('hidden');
-            }
-        }
-
-        function clearResults() {
-            if (resultsData.length === 0) {
-                alert('삭제할 데이터가 없습니다.');
-                return;
-            }
-            
-            if (confirm('모든 결과를 삭제하시겠습니까?')) {
-                resultsData = [];
-                resultCounter = 0;
-                document.getElementById('results-tbody').innerHTML = '';
-                document.getElementById('result').classList.add('hidden');
-                alert('모든 결과가 삭제되었습니다.');
-            }
-        }
-
-        function copyResults() {
-            if (resultsData.length === 0) {
-                alert('복사할 데이터가 없습니다.');
-                return;
-            }
-            
-            const headers = ['번호', '학년', '반', '학번', '이름', '과목', '결시시험', '세부명', '결시사유', '기준점', '인정점'];
-            let textContent = headers.join('\t') + '\n';
-            
-            resultsData.forEach(data => {
-                const row = [
-                    data.id,
-                    data.grade,
-                    data.class,
-                    data.number,
-                    data.name,
-                    data.subject,
-                    data.examType,
-                    data.detailName,
-                    data.absenceReason,
-                    data.baseScore,
-                    data.finalScore
-                ].join('\t');
-                textContent += row + '\n';
-            });
-            
-            navigator.clipboard.writeText(textContent).then(() => {
-                alert('데이터가 클립보드에 복사되었습니다!\nExcel에 붙여넣기(Ctrl+V)하세요.');
-            }).catch(() => {
-                const textArea = document.createElement('textarea');
-                textArea.value = textContent;
-                document.body.appendChild(textArea);
-                textArea.select();
-                document.execCommand('copy');
-                document.body.removeChild(textArea);
-                alert('데이터가 클립보드에 복사되었습니다!\nExcel에 붙여넣기(Ctrl+V)하세요.');
-            });
-        }function downloadXLSX() {
-    if (resultsData.length === 0) {
-        alert('저장할 데이터가 없습니다.');
-        return;
+        XLSX.writeFile(workbook, "결시자_인정점.xlsx");
     }
-
-    // 헤더
-    const headers = ['번호','학년','반','학번','이름','과목','결시시험','세부명','결시사유','기준점','인정점'];
-
-    // 데이터 rows
-    const rows = resultsData.map(data => [
-        data.id,
-        data.grade,
-        data.class,
-        data.number,
-        data.name,
-        data.subject,
-        data.examType,
-        data.detailName,
-        data.absenceReason,
-        Number(data.baseScore),
-        Number(data.finalScore)
-    ]);
-
-    // 시트 생성
-    const worksheet = XLSX.utils.aoa_to_sheet([headers, ...rows]);
-
-    // 열 너비 자동 설정 (조금 보기 좋게)
-    const colWidths = headers.map(h => ({ wch: Math.max(h.length, 10) }));
-    worksheet['!cols'] = colWidths;
-
-    // 워크북 생성 후 시트 붙이기
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "결과");
-
-    // 파일 다운로드
-    XLSX.writeFile(workbook, "결시자_인정점.xlsx");
-}
-
-
-        function resetForm() {
-            currentExamType = '';
-            currentMethod = '';
-            currentAbsenceReason = '';
-            
-            document.querySelectorAll('.btn-hover, .method-option').forEach(btn => {
-                btn.classList.remove('selected', 'border-blue-500', 'bg-blue-50');
-            });
-            
-            document.getElementById('absence-reason').classList.add('hidden');
-            document.getElementById('calculation-method').classList.add('hidden');
-            document.getElementById('input-form').classList.add('hidden');
-            document.getElementById('input-fields').innerHTML = '';
-        }
-
-        function openCalculator(targetId, calculatorType) {
-            currentCalculatorTarget = targetId;
-            currentCalculatorType = calculatorType;
-            calculatorScores = [];
-            
-            const modal = document.getElementById('calculator-modal');
-            const title = document.getElementById('calculator-title');
-            const content = document.getElementById('calculator-content');
-            
-            if (calculatorType === 'student-written') {
-                title.textContent = '학생 지필평가 점수 계산기';
-                content.innerHTML = `
-                    <div class="space-y-4">
-                        <p class="text-sm text-gray-600">해당 학생의 중간고사와 기말고사 점수를 입력하여 지필평가 점수를 계산합니다.</p>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">중간고사 점수 (없으면 비워두세요)</label>
-                            <input type="number" step="0.1" id="calc-student-midterm" placeholder="예: 85" 
-                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">기말고사 점수 (없으면 비워두세요)</label>
-                            <input type="number" step="0.1" id="calc-student-final" placeholder="예: 88" 
-                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                        </div>
-                        <div class="bg-blue-50 p-3 rounded-lg">
-                            <div class="text-sm text-blue-800">
-                                <strong>계산 결과:</strong> <span id="student-written-result">-</span>점
-                            </div>
-                        </div>
-                    </div>
-                `;
-                
-                // 실시간 계산
-                const midtermInput = document.getElementById('calc-student-midterm');
-                const finalInput = document.getElementById('calc-student-final');
-                const resultSpan = document.getElementById('student-written-result');
-                
-                function updateStudentWritten() {
-                    const midterm = parseFloat(midtermInput.value) || 0;
-                    const final = parseFloat(finalInput.value) || 0;
-                    
-                    if (midterm > 0 && final > 0) {
-                        const avg = (midterm + final) / 2;
-                        resultSpan.textContent = avg.toFixed(2);
-                    } else if (midterm > 0) {
-                        resultSpan.textContent = midterm.toFixed(2);
-                    } else if (final > 0) {
-                        resultSpan.textContent = final.toFixed(2);
-                    } else {
-                        resultSpan.textContent = '-';
-                    }
-                }
-                
-                midtermInput.addEventListener('input', updateStudentWritten);
-                finalInput.addEventListener('input', updateStudentWritten);
-                
-            } else if (calculatorType === 'written-avg') {
-                title.textContent = '영어 지필평가 평균 계산기';
-                content.innerHTML = `
-                    <div class="space-y-4">
-                        <p class="text-sm text-gray-600">중간고사와 기말고사 점수를 입력하여 지필평가 평균을 계산합니다.</p>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">중간고사 평균</label>
-                            <input type="number" step="0.1" id="calc-midterm-avg" placeholder="예: 75.5" 
-                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                        </div>
-                        <div>
-                            <label class="block text-sm font-medium text-gray-700 mb-2">기말고사 평균</label>
-                            <input type="number" step="0.1" id="calc-final-avg" placeholder="예: 78.2" 
-                                   class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
-                        </div>
-                        <div class="bg-blue-50 p-3 rounded-lg">
-                            <div class="text-sm text-blue-800">
-                                <strong>계산 결과:</strong> <span id="written-avg-result">-</span>점
-                            </div>
-                        </div>
-                    </div>
-                `;
-                
-                // 실시간 계산
-                const midtermInput = document.getElementById('calc-midterm-avg');
-                const finalInput = document.getElementById('calc-final-avg');
-                const resultSpan = document.getElementById('written-avg-result');
-                
-                function updateWrittenAvg() {
-                    const midterm = parseFloat(midtermInput.value) || 0;
-                    const final = parseFloat(finalInput.value) || 0;
-                    if (midterm > 0 && final > 0) {
-                        const avg = (midterm + final) / 2;
-                        resultSpan.textContent = avg.toFixed(2);
-                    } else {
-                        resultSpan.textContent = '-';
-                    }
-                }
-                
-                midtermInput.addEventListener('input', updateWrittenAvg);
-                finalInput.addEventListener('input', updateWrittenAvg);
-                
-            } else if (calculatorType === 'student-performance') {
-                title.textContent = '학생 수행평가 점수 계산기';
-                content.innerHTML = `
-                    <div class="space-y-4">
-                        <p class="text-sm text-gray-600">해당 학생의 수행평가 영역별 점수를 입력하세요.</p>
-                        <div id="student-performance-scores-container">
-                            <div class="student-performance-score-item flex items-center space-x-2 mb-2">
-                                <input type="text" placeholder="영역명 (예: 말하기)" 
-                                       class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm">
-                                <input type="number" step="0.1" placeholder="학생점수" 
-                                       class="w-24 px-3 py-2 border border-gray-300 rounded-lg text-sm">
-                                <button type="button" onclick="removeStudentPerformanceScore(this)" 
-                                        class="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded text-xs">
-                                    삭제
-                                </button>
-                            </div>
-                        </div>
-                        <button type="button" onclick="addStudentPerformanceScore()" 
-                                class="w-full bg-green-500 hover:bg-green-600 text-white py-2 rounded-lg text-sm">
-                            + 영역 추가
-                        </button>
-                        <div class="bg-blue-50 p-3 rounded-lg">
-                            <div class="text-sm text-blue-800">
-                                <strong>계산 결과:</strong> <span id="student-performance-result">-</span>점
-                            </div>
-                        </div>
-                    </div>
-                `;
-                
-                updateStudentPerformanceAvg();
-                
-            } else if (calculatorType === 'performance-avg') {
-                title.textContent = '수행평가 평균 계산기';
-                content.innerHTML = `
-                    <div class="space-y-4">
-                        <p class="text-sm text-gray-600">영어듣기를 제외한 수행평가 영역들의 점수를 입력하세요.</p>
-                        <div id="performance-scores-container">
-                            <div class="performance-score-item flex items-center space-x-2 mb-2">
-                                <input type="text" placeholder="영역명 (예: 말하기)" 
-                                       class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm">
-                                <input type="number" step="0.1" placeholder="평균점수" 
-                                       class="w-24 px-3 py-2 border border-gray-300 rounded-lg text-sm">
-                                <button type="button" onclick="removePerformanceScore(this)" 
-                                        class="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded text-xs">
-                                    삭제
-                                </button>
-                            </div>
-                        </div>
-                        <button type="button" onclick="addPerformanceScore()" 
-                                class="w-full bg-green-500 hover:bg-green-600 text-white py-2 rounded-lg text-sm">
-                            + 영역 추가
-                        </button>
-                        <div class="bg-blue-50 p-3 rounded-lg">
-                            <div class="text-sm text-blue-800">
-                                <strong>계산 결과:</strong> <span id="performance-avg-result">-</span>점
-                            </div>
-                        </div>
-                    </div>
-                `;
-                
-                updatePerformanceAvg();
-                
-            } else if (calculatorType === 'other-performance-scores') {
-                title.textContent = '해당 학생의 다른 수행평가 점수 계산기';
-                content.innerHTML = `
-                    <div class="space-y-4">
-                        <p class="text-sm text-gray-600">해당 학생이 결시하지 않은 다른 수행평가 영역별 점수를 입력하세요.</p>
-                        <div id="other-performance-scores-container">
-                            <div class="other-performance-score-item flex items-center space-x-2 mb-2">
-                                <input type="text" placeholder="영역명 (예: 발표)" 
-                                       class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm">
-                                <input type="number" step="0.1" placeholder="학생점수" 
-                                       class="w-24 px-3 py-2 border border-gray-300 rounded-lg text-sm" 
-                                       oninput="updateOtherPerformanceScores()">
-                                <button type="button" onclick="removeOtherPerformanceScore(this)" 
-                                        class="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded text-xs">
-                                    삭제
-                                </button>
-                            </div>
-                        </div>
-                        <button type="button" onclick="addOtherPerformanceScore()" 
-                                class="w-full bg-green-500 hover:bg-green-600 text-white py-2 rounded-lg text-sm">
-                            + 영역 추가
-                        </button>
-                        <div class="bg-blue-50 p-3 rounded-lg">
-                            <div class="text-sm text-blue-800">
-                                <strong>계산 결과:</strong> <span id="other-performance-scores-result">-</span>점
-                            </div>
-                        </div>
-                    </div>
-                `;
-                
-                updateOtherPerformanceScores();
-                
-            } else if (calculatorType === 'student-performance-areas') {
-                title.textContent = '해당 학생의 수행평가 영역별 점수 계산기';
-                content.innerHTML = `
-                    <div class="space-y-4">
-                        <p class="text-sm text-gray-600">해당 학생이 결시하지 않은 수행평가 영역별 점수를 입력하세요. (최대 4개 영역)</p>
-                        <div id="student-areas-container">
-                            <div class="student-area-item flex items-center space-x-2 mb-2">
-                                <input type="text" placeholder="영역명 (예: 말하기)" 
-                                       class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm">
-                                <input type="number" step="0.1" placeholder="학생점수" 
-                                       class="w-24 px-3 py-2 border border-gray-300 rounded-lg text-sm" 
-                                       oninput="updateStudentAreas()">
-                                <button type="button" onclick="removeStudentArea(this)" 
-                                        class="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded text-xs">
-                                    삭제
-                                </button>
-                            </div>
-                        </div>
-                        <button type="button" onclick="addStudentArea()" 
-                                class="w-full bg-green-500 hover:bg-green-600 text-white py-2 rounded-lg text-sm">
-                            + 영역 추가 (최대 4개)
-                        </button>
-                        <div class="bg-blue-50 p-3 rounded-lg">
-                            <div class="text-sm text-blue-800">
-                                <strong>평균 점수:</strong> <span id="student-areas-result">-</span>점
-                            </div>
-                        </div>
-                    </div>
-                `;
-                
-                updateStudentAreas();
-                
-            } else if (calculatorType === 'class-performance-areas') {
-                title.textContent = '전체 학생의 수행평가 영역별 평균 계산기';
-                content.innerHTML = `
-                    <div class="space-y-4">
-                        <p class="text-sm text-gray-600">전체 학생들이 결시하지 않은 수행평가 영역별 평균 점수를 입력하세요. (최대 4개 영역)</p>
-                        <div id="class-areas-container">
-                            <div class="class-area-item flex items-center space-x-2 mb-2">
-                                <input type="text" placeholder="영역명 (예: 말하기)" 
-                                       class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm">
-                                <input type="number" step="0.1" placeholder="평균점수" 
-                                       class="w-24 px-3 py-2 border border-gray-300 rounded-lg text-sm" 
-                                       oninput="updateClassAreas()">
-                                <button type="button" onclick="removeClassArea(this)" 
-                                        class="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded text-xs">
-                                    삭제
-                                </button>
-                            </div>
-                        </div>
-                        <button type="button" onclick="addClassArea()" 
-                                class="w-full bg-green-500 hover:bg-green-600 text-white py-2 rounded-lg text-sm">
-                            + 영역 추가 (최대 4개)
-                        </button>
-                        <div class="bg-blue-50 p-3 rounded-lg">
-                            <div class="text-sm text-blue-800">
-                                <strong>평균 점수:</strong> <span id="class-areas-result">-</span>점
-                            </div>
-                        </div>
-                    </div>
-                `;
-                
-                updateClassAreas();
-                
-            } else if (calculatorType === 'other-performance-avg') {
-                title.textContent = '전체 학생의 다른 수행평가 평균 계산기';
-                content.innerHTML = `
-                    <div class="space-y-4">
-                        <p class="text-sm text-gray-600">전체 학생들이 결시하지 않은 다른 수행평가 영역들의 평균 점수를 입력하세요.</p>
-                        <div id="other-performance-avg-container">
-                            <div class="other-performance-avg-item flex items-center space-x-2 mb-2">
-                                <input type="text" placeholder="영역명 (예: 발표)" 
-                                       class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm">
-                                <input type="number" step="0.1" placeholder="평균점수" 
-                                       class="w-24 px-3 py-2 border border-gray-300 rounded-lg text-sm" 
-                                       oninput="updateOtherPerformanceAvg()">
-                                <button type="button" onclick="removeOtherPerformanceAvg(this)" 
-                                        class="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded text-xs">
-                                    삭제
-                                </button>
-                            </div>
-                        </div>
-                        <button type="button" onclick="addOtherPerformanceAvg()" 
-                                class="w-full bg-green-500 hover:bg-green-600 text-white py-2 rounded-lg text-sm">
-                            + 영역 추가
-                        </button>
-                        <div class="bg-blue-50 p-3 rounded-lg">
-                            <div class="text-sm text-blue-800">
-                                <strong>계산 결과:</strong> <span id="other-performance-avg-result">-</span>점
-                            </div>
-                        </div>
-                    </div>
-                `;
-                
-                updateOtherPerformanceAvg();
-            }
-            
-            modal.classList.remove('hidden');
-        }
-
-        function addPerformanceScore() {
-            const container = document.getElementById('performance-scores-container');
-            const newItem = document.createElement('div');
-            newItem.className = 'performance-score-item flex items-center space-x-2 mb-2';
-            newItem.innerHTML = `
-                <input type="text" placeholder="영역명 (예: 쓰기)" 
-                       class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm">
-                <input type="number" step="0.1" placeholder="평균점수" 
-                       class="w-24 px-3 py-2 border border-gray-300 rounded-lg text-sm" 
-                       oninput="updatePerformanceAvg()">
-                <button type="button" onclick="removePerformanceScore(this)" 
-                        class="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded text-xs">
-                    삭제
-                </button>
-            `;
-            container.appendChild(newItem);
-            
-            // 기존 입력 필드에도 이벤트 리스너 추가
-            const scoreInputs = newItem.querySelectorAll('input[type="number"]');
-            scoreInputs.forEach(input => {
-                input.addEventListener('input', updatePerformanceAvg);
-            });
-        }
-
-        function removePerformanceScore(button) {
-            const container = document.getElementById('performance-scores-container');
-            if (container.children.length > 1) {
-                button.parentElement.remove();
-                updatePerformanceAvg();
-            }
-        }
-
-        function updatePerformanceAvg() {
-            const container = document.getElementById('performance-scores-container');
-            const scoreInputs = container.querySelectorAll('input[type="number"]');
-            const resultSpan = document.getElementById('performance-avg-result');
-            
-            let total = 0;
-            let count = 0;
-            
-            scoreInputs.forEach(input => {
-                const value = parseFloat(input.value);
-                if (value > 0) {
-                    total += value;
-                    count++;
-                }
-            });
-            
-            if (count > 0) {
-                const avg = total / count;
-                resultSpan.textContent = avg.toFixed(2);
-            } else {
-                resultSpan.textContent = '-';
-            }
-        }
-
-        function closeCalculator() {
-            document.getElementById('calculator-modal').classList.add('hidden');
-            currentCalculatorTarget = '';
-            currentCalculatorType = '';
-            calculatorScores = [];
-        }
-
-        function addStudentPerformanceScore() {
-            const container = document.getElementById('student-performance-scores-container');
-            const newItem = document.createElement('div');
-            newItem.className = 'student-performance-score-item flex items-center space-x-2 mb-2';
-            newItem.innerHTML = `
-                <input type="text" placeholder="영역명 (예: 쓰기)" 
-                       class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm">
-                <input type="number" step="0.1" placeholder="학생점수" 
-                       class="w-24 px-3 py-2 border border-gray-300 rounded-lg text-sm" 
-                       oninput="updateStudentPerformanceAvg()">
-                <button type="button" onclick="removeStudentPerformanceScore(this)" 
-                        class="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded text-xs">
-                    삭제
-                </button>
-            `;
-            container.appendChild(newItem);
-            
-            // 기존 입력 필드에도 이벤트 리스너 추가
-            const scoreInputs = newItem.querySelectorAll('input[type="number"]');
-            scoreInputs.forEach(input => {
-                input.addEventListener('input', updateStudentPerformanceAvg);
-            });
-        }
-
-        function removeStudentPerformanceScore(button) {
-            const container = document.getElementById('student-performance-scores-container');
-            if (container.children.length > 1) {
-                button.parentElement.remove();
-                updateStudentPerformanceAvg();
-            }
-        }
-
-        function updateStudentPerformanceAvg() {
-            const container = document.getElementById('student-performance-scores-container');
-            const scoreInputs = container.querySelectorAll('input[type="number"]');
-            const resultSpan = document.getElementById('student-performance-result');
-            
-            let total = 0;
-            let count = 0;
-            
-            scoreInputs.forEach(input => {
-                const value = parseFloat(input.value);
-                if (value > 0) {
-                    total += value;
-                    count++;
-                }
-            });
-            
-            if (count > 0) {
-                const avg = total / count;
-                resultSpan.textContent = avg.toFixed(2);
-            } else {
-                resultSpan.textContent = '-';
-            }
-        }
-
-        function addOtherPerformanceScore() {
-            const container = document.getElementById('other-performance-scores-container');
-            const newItem = document.createElement('div');
-            newItem.className = 'other-performance-score-item flex items-center space-x-2 mb-2';
-            newItem.innerHTML = `
-                <input type="text" placeholder="영역명 (예: 쓰기)" 
-                       class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm">
-                <input type="number" step="0.1" placeholder="학생점수" 
-                       class="w-24 px-3 py-2 border border-gray-300 rounded-lg text-sm" 
-                       oninput="updateOtherPerformanceScores()">
-                <button type="button" onclick="removeOtherPerformanceScore(this)" 
-                        class="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded text-xs">
-                    삭제
-                </button>
-            `;
-            container.appendChild(newItem);
-        }
-
-        function removeOtherPerformanceScore(button) {
-            const container = document.getElementById('other-performance-scores-container');
-            if (container.children.length > 1) {
-                button.parentElement.remove();
-                updateOtherPerformanceScores();
-            }
-        }
-
-        function updateOtherPerformanceScores() {
-            const container = document.getElementById('other-performance-scores-container');
-            const scoreInputs = container.querySelectorAll('input[type="number"]');
-            const resultSpan = document.getElementById('other-performance-scores-result');
-            
-            let total = 0;
-            let count = 0;
-            
-            scoreInputs.forEach(input => {
-                const value = parseFloat(input.value);
-                if (value > 0) {
-                    total += value;
-                    count++;
-                }
-            });
-            
-            if (count > 0) {
-                const avg = total / count;
-                resultSpan.textContent = avg.toFixed(2);
-            } else {
-                resultSpan.textContent = '-';
-            }
-        }
-
-        function addOtherPerformanceAvg() {
-            const container = document.getElementById('other-performance-avg-container');
-            const newItem = document.createElement('div');
-            newItem.className = 'other-performance-avg-item flex items-center space-x-2 mb-2';
-            newItem.innerHTML = `
-                <input type="text" placeholder="영역명 (예: 쓰기)" 
-                       class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm">
-                <input type="number" step="0.1" placeholder="평균점수" 
-                       class="w-24 px-3 py-2 border border-gray-300 rounded-lg text-sm" 
-                       oninput="updateOtherPerformanceAvg()">
-                <button type="button" onclick="removeOtherPerformanceAvg(this)" 
-                        class="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded text-xs">
-                    삭제
-                </button>
-            `;
-            container.appendChild(newItem);
-        }
-
-        function removeOtherPerformanceAvg(button) {
-            const container = document.getElementById('other-performance-avg-container');
-            if (container.children.length > 1) {
-                button.parentElement.remove();
-                updateOtherPerformanceAvg();
-            }
-        }
-
-        function updateOtherPerformanceAvg() {
-            const container = document.getElementById('other-performance-avg-container');
-            const scoreInputs = container.querySelectorAll('input[type="number"]');
-            const resultSpan = document.getElementById('other-performance-avg-result');
-            
-            let total = 0;
-            let count = 0;
-            
-            scoreInputs.forEach(input => {
-                const value = parseFloat(input.value);
-                if (value > 0) {
-                    total += value;
-                    count++;
-                }
-            });
-            
-            if (count > 0) {
-                const avg = total / count;
-                resultSpan.textContent = avg.toFixed(2);
-            } else {
-                resultSpan.textContent = '-';
-            }
-        }
-
-        function applyCalculation() {
-            let result = 0;
-            
-            if (currentCalculatorType === 'student-written') {
-                const midterm = parseFloat(document.getElementById('calc-student-midterm').value) || 0;
-                const final = parseFloat(document.getElementById('calc-student-final').value) || 0;
-                
-                if (midterm > 0 && final > 0) {
-                    result = (midterm + final) / 2;
-                } else if (midterm > 0) {
-                    result = midterm;
-                } else if (final > 0) {
-                    result = final;
-                } else {
-                    alert('중간고사 또는 기말고사 점수 중 최소 하나는 입력해주세요.');
-                    return;
-                }
-            } else if (currentCalculatorType === 'written-avg') {
-                const midterm = parseFloat(document.getElementById('calc-midterm-avg').value) || 0;
-                const final = parseFloat(document.getElementById('calc-final-avg').value) || 0;
-                
-                if (midterm > 0 && final > 0) {
-                    result = (midterm + final) / 2;
-                } else {
-                    alert('중간고사와 기말고사 평균을 모두 입력해주세요.');
-                    return;
-                }
-            } else if (currentCalculatorType === 'student-performance') {
-                const container = document.getElementById('student-performance-scores-container');
-                const scoreInputs = container.querySelectorAll('input[type="number"]');
-                
-                let total = 0;
-                let count = 0;
-                
-                scoreInputs.forEach(input => {
-                    const value = parseFloat(input.value);
-                    if (value > 0) {
-                        total += value;
-                        count++;
-                    }
-                });
-                
-                if (count > 0) {
-                    result = total / count;
-                } else {
-                    alert('최소 하나의 수행평가 점수를 입력해주세요.');
-                    return;
-                }
-            } else if (currentCalculatorType === 'performance-avg') {
-                const container = document.getElementById('performance-scores-container');
-                const scoreInputs = container.querySelectorAll('input[type="number"]');
-                
-                let total = 0;
-                let count = 0;
-                
-                scoreInputs.forEach(input => {
-                    const value = parseFloat(input.value);
-                    if (value > 0) {
-                        total += value;
-                        count++;
-                    }
-                });
-                
-                if (count > 0) {
-                    result = total / count;
-                } else {
-                    alert('최소 하나의 수행평가 점수를 입력해주세요.');
-                    return;
-                }
-            } else if (currentCalculatorType === 'student-performance-areas') {
-                const container = document.getElementById('student-areas-container');
-                const scoreInputs = container.querySelectorAll('input[type="number"]');
-                
-                let total = 0;
-                let count = 0;
-                
-                scoreInputs.forEach(input => {
-                    const value = parseFloat(input.value);
-                    if (value > 0) {
-                        total += value;
-                        count++;
-                    }
-                });
-                
-                if (count > 0) {
-                    result = total / count;
-                } else {
-                    alert('최소 하나의 수행평가 점수를 입력해주세요.');
-                    return;
-                }
-            } else if (currentCalculatorType === 'class-performance-areas') {
-                const container = document.getElementById('class-areas-container');
-                const scoreInputs = container.querySelectorAll('input[type="number"]');
-                
-                let total = 0;
-                let count = 0;
-                
-                scoreInputs.forEach(input => {
-                    const value = parseFloat(input.value);
-                    if (value > 0) {
-                        total += value;
-                        count++;
-                    }
-                });
-                
-                if (count > 0) {
-                    result = total / count;
-                } else {
-                    alert('최소 하나의 수행평가 점수를 입력해주세요.');
-                    return;
-                }
-            } else if (currentCalculatorType === 'other-performance-scores') {
-                const container = document.getElementById('other-performance-scores-container');
-                const scoreInputs = container.querySelectorAll('input[type="number"]');
-                
-                let total = 0;
-                let count = 0;
-                
-                scoreInputs.forEach(input => {
-                    const value = parseFloat(input.value);
-                    if (value > 0) {
-                        total += value;
-                        count++;
-                    }
-                });
-                
-                if (count > 0) {
-                    result = total / count;
-                } else {
-                    alert('최소 하나의 수행평가 점수를 입력해주세요.');
-                    return;
-                }
-            } else if (currentCalculatorType === 'other-performance-avg') {
-                const container = document.getElementById('other-performance-avg-container');
-                const scoreInputs = container.querySelectorAll('input[type="number"]');
-                
-                let total = 0;
-                let count = 0;
-                
-                scoreInputs.forEach(input => {
-                    const value = parseFloat(input.value);
-                    if (value > 0) {
-                        total += value;
-                        count++;
-                    }
-                });
-                
-                if (count > 0) {
-                    result = total / count;
-                } else {
-                    alert('최소 하나의 수행평가 점수를 입력해주세요.');
-                    return;
-                }
-            }
-            
-            // 결과를 해당 입력 필드에 적용
-            const targetInput = document.getElementById(currentCalculatorTarget);
-            if (targetInput) {
-                targetInput.value = result.toFixed(2);
-            }
-            
-            closeCalculator();
-        }
-
-        // 평균 점수 저장 함수들
-        function saveAverage(type, value) {
-            const numValue = parseFloat(value);
-            if (numValue > 0) {
-                savedAverages[type] = numValue;
-                updateSavedAveragesDisplay();
-                autoFillAverages();
-            }
-        }
-
-        function clearAverage(type) {
-            savedAverages[type] = null;
-            document.getElementById(`saved-${type === 'englishListening' ? 'listening' : type}-avg`).value = '';
-            updateSavedAveragesDisplay();
-        }
-
-        function clearAllAverages() {
-            if (confirm('저장된 모든 평균 점수를 삭제하시겠습니까?')) {
-                savedAverages = {
-                    midterm: null,
-                    final: null,
-                    performance: {},
-                    englishListening: null,
-                    performance1: null,
-                    performance2: null,
-                    performance3: null
-                };
-                savedPerformanceAreaNames = {
-                    performance1: null,
-                    performance2: null,
-                    performance3: null
-                };
-                document.getElementById('saved-midterm-avg').value = '';
-                document.getElementById('saved-final-avg').value = '';
-                document.getElementById('saved-listening-avg').value = '';
-                document.getElementById('saved-performance1-avg').value = '';
-                document.getElementById('saved-performance2-avg').value = '';
-                document.getElementById('saved-performance3-avg').value = '';
-                document.getElementById('saved-performance1-name').value = '';
-                document.getElementById('saved-performance2-name').value = '';
-                document.getElementById('saved-performance3-name').value = '';
-                updatePerformanceAreaTitles();
-                updateSavedAveragesDisplay();
-                alert('모든 평균 점수가 삭제되었습니다.');
-            }
-        }
-        
-        function savePerformanceAreaName(areaType, name) {
-            if (name && name.trim()) {
-                savedPerformanceAreaNames[areaType] = name.trim();
-                updatePerformanceAreaTitles();
-            }
-        }
-        
-        function clearPerformanceArea(areaType) {
-            savedAverages[areaType] = null;
-            savedPerformanceAreaNames[areaType] = null;
-            document.getElementById(`saved-${areaType}-avg`).value = '';
-            document.getElementById(`saved-${areaType}-name`).value = '';
-            updatePerformanceAreaTitles();
-            updateSavedAveragesDisplay();
-        }
-        
-        function updatePerformanceAreaTitles() {
-            ['performance1', 'performance2', 'performance3'].forEach(areaType => {
-                const titleElement = document.getElementById(`${areaType}-title`);
-                const savedName = savedPerformanceAreaNames[areaType];
-                if (savedName) {
-                    titleElement.textContent = savedName;
-                } else {
-                    const defaultNames = {
-                        'performance1': '수행평가 1',
-                        'performance2': '수행평가 2',
-                        'performance3': '수행평가 3'
-                    };
-                    titleElement.textContent = defaultNames[areaType];
-                }
-            });
-        }
-
-        function savePerformanceAverage(subject, areaName, value) {
-            if (!savedAverages.performance[subject]) {
-                savedAverages.performance[subject] = {};
-            }
-            savedAverages.performance[subject][areaName] = parseFloat(value);
-            updateSavedAveragesDisplay();
-        }
-
-        function clearPerformanceAverage(subject, areaName) {
-            if (savedAverages.performance[subject]) {
-                delete savedAverages.performance[subject][areaName];
-                if (Object.keys(savedAverages.performance[subject]).length === 0) {
-                    delete savedAverages.performance[subject];
-                }
-            }
-            updateSavedAveragesDisplay();
-        }
-
-        function updateSavedAveragesDisplay() {
-            // 수행평가 평균 관리 기능 제거됨
-        }
-
-        function autoFillAverages() {
-            // 중간고사 평균 자동 입력
-            if (savedAverages.midterm) {
-                const midtermAvgInput = document.getElementById('midterm-avg');
-                if (midtermAvgInput && !midtermAvgInput.value) {
-                    midtermAvgInput.value = savedAverages.midterm;
-                }
-            }
-
-            // 기말고사 평균 자동 입력
-            if (savedAverages.final) {
-                const finalAvgInput = document.getElementById('final-avg');
-                if (finalAvgInput && !finalAvgInput.value) {
-                    finalAvgInput.value = savedAverages.final;
-                }
-            }
-
-            // 영어듣기 평균 자동 입력
-            if (savedAverages.englishListening) {
-                const listeningAvgInput = document.getElementById('listening-avg');
-                if (listeningAvgInput && !listeningAvgInput.value) {
-                    listeningAvgInput.value = savedAverages.englishListening;
-                }
-            }
-
-            // 수행평가 평균 자동 입력
-            const currentSubject = document.getElementById('student-subject').value;
-            if (currentSubject && savedAverages.performance[currentSubject]) {
-                const absentPerfAvgInput = document.getElementById('absent-performance-avg');
-                const absentPerfNameInput = document.getElementById('absent-performance-name');
-                
-                if (absentPerfAvgInput && absentPerfNameInput && absentPerfNameInput.value) {
-                    const areaName = absentPerfNameInput.value;
-                    if (savedAverages.performance[currentSubject][areaName]) {
-                        absentPerfAvgInput.value = savedAverages.performance[currentSubject][areaName];
-                    }
-                }
-            }
-        }
-
-
-
-        // 새로운 계산기 함수들
-        function addStudentArea() {
-            const container = document.getElementById('student-areas-container');
-            if (container.children.length >= 4) {
-                alert('최대 4개 영역까지만 추가할 수 있습니다.');
-                return;
-            }
-            
-            const newItem = document.createElement('div');
-            newItem.className = 'student-area-item flex items-center space-x-2 mb-2';
-            newItem.innerHTML = `
-                <input type="text" placeholder="영역명 (예: 쓰기)" 
-                       class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm">
-                <input type="number" step="0.1" placeholder="학생점수" 
-                       class="w-24 px-3 py-2 border border-gray-300 rounded-lg text-sm" 
-                       oninput="updateStudentAreas()">
-                <button type="button" onclick="removeStudentArea(this)" 
-                        class="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded text-xs">
-                    삭제
-                </button>
-            `;
-            container.appendChild(newItem);
-        }
-
-        function removeStudentArea(button) {
-            const container = document.getElementById('student-areas-container');
-            if (container.children.length > 1) {
-                button.parentElement.remove();
-                updateStudentAreas();
-            }
-        }
-
-        function updateStudentAreas() {
-            const container = document.getElementById('student-areas-container');
-            const scoreInputs = container.querySelectorAll('input[type="number"]');
-            const resultSpan = document.getElementById('student-areas-result');
-            
-            let total = 0;
-            let count = 0;
-            
-            scoreInputs.forEach(input => {
-                const value = parseFloat(input.value);
-                if (value > 0) {
-                    total += value;
-                    count++;
-                }
-            });
-            
-            if (count > 0) {
-                const avg = total / count;
-                resultSpan.textContent = avg.toFixed(2);
-            } else {
-                resultSpan.textContent = '-';
-            }
-        }
-
-        function addClassArea() {
-            const container = document.getElementById('class-areas-container');
-            if (container.children.length >= 4) {
-                alert('최대 4개 영역까지만 추가할 수 있습니다.');
-                return;
-            }
-            
-            const newItem = document.createElement('div');
-            newItem.className = 'class-area-item flex items-center space-x-2 mb-2';
-            newItem.innerHTML = `
-                <input type="text" placeholder="영역명 (예: 쓰기)" 
-                       class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm">
-                <input type="number" step="0.1" placeholder="평균점수" 
-                       class="w-24 px-3 py-2 border border-gray-300 rounded-lg text-sm" 
-                       oninput="updateClassAreas()">
-                <button type="button" onclick="removeClassArea(this)" 
-                        class="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded text-xs">
-                    삭제
-                </button>
-            `;
-            container.appendChild(newItem);
-        }
-
-        function removeClassArea(button) {
-            const container = document.getElementById('class-areas-container');
-            if (container.children.length > 1) {
-                button.parentElement.remove();
-                updateClassAreas();
-            }
-        }
-
-        function updateClassAreas() {
-            const container = document.getElementById('class-areas-container');
-            const scoreInputs = container.querySelectorAll('input[type="number"]');
-            const resultSpan = document.getElementById('class-areas-result');
-            
-            let total = 0;
-            let count = 0;
-            
-            scoreInputs.forEach(input => {
-                const value = parseFloat(input.value);
-                if (value > 0) {
-                    total += value;
-                    count++;
-                }
-            });
-            
-            if (count > 0) {
-                const avg = total / count;
-                resultSpan.textContent = avg.toFixed(2);
-            } else {
-                resultSpan.textContent = '-';
-            }
-        }
-
-        // 기존 수행평가 입력 필드에 이벤트 리스너 추가
-        document.addEventListener('DOMContentLoaded', function() {
-            // 페이지 로드 시 첫 번째 수행평가 입력 필드에 이벤트 리스너 추가
-            setTimeout(() => {
-                const firstScoreInput = document.querySelector('#performance-scores-container input[type="number"]');
-                if (firstScoreInput) {
-                    firstScoreInput.addEventListener('input', updatePerformanceAvg);
-                }
-                
-                const firstStudentScoreInput = document.querySelector('#student-performance-scores-container input[type="number"]');
-                if (firstStudentScoreInput) {
-                    firstStudentScoreInput.addEventListener('input', updateStudentPerformanceAvg);
-                }
-            }, 100);
-            
-            // 저장된 평균 표시 초기화
-            updateSavedAveragesDisplay();
-            updatePerformanceAreaTitles();
-        });
-    </script>
-<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+  </script>
 </body>
 </html>
