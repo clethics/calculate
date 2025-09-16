@@ -25,7 +25,7 @@
     <div class="max-w-4xl mx-auto">
         <div class="bg-white rounded-2xl shadow-xl p-8 mb-6">
             <h1 class="text-3xl font-bold text-gray-800 text-center mb-2">🏫 일광중학교 결시자 인정점 계산기</h1>
-            <p class="text-gray-600 text-center mb-8">편리한 인정점 계산을 위해 과정부에서 제작하였습니다😊</p>
+            <p class="text-gray-600 text-center mb-8">인정점 계산을 보다 편리하게😊</p>
             
             <!-- 학년/과목 선택 -->
             <div class="mb-8">
@@ -293,16 +293,22 @@
                 <div class="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-6">
                     <div class="flex justify-between items-center mb-4">
                         <h3 class="text-xl font-semibold text-green-800">📊 계산 결과</h3>
-                        <div class="space-x-2">
-                            <button type="button" onclick="copyResults()" 
-                                    class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200">
-                                복사하기
-                            </button>
-                            <button type="button" onclick="clearResults()" 
-                                    class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200">
-                                전체 삭제
-                            </button>
-                        </div>
+                       <div class="space-x-2">
+    <button type="button" onclick="copyResults()" 
+            class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200">
+        복사하기
+    </button>
+    <!-- ✅ Excel 저장 버튼 추가 -->
+    <button type="button" onclick="downloadXLSX()" 
+            class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200">
+        Excel 저장
+    </button>
+    <button type="button" onclick="clearResults()" 
+            class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200">
+        전체 삭제
+    </button>
+</div>
+
                     </div>
                     <div class="overflow-x-auto">
                         <table id="results-table" class="w-full border-collapse border border-gray-300 bg-white rounded-lg overflow-hidden shadow-sm">
@@ -1228,7 +1234,38 @@
                 alert('데이터가 클립보드에 복사되었습니다!\nExcel에 붙여넣기(Ctrl+V)하세요.');
             });
         }
+function downloadXLSX() {
+    if (resultsData.length === 0) {
+        alert('저장할 데이터가 없습니다.');
+        return;
+    }
 
+    const headers = ['번호','학년','반','학번','이름','과목','결시시험','세부명','결시사유','인정비율','산출기준','기준점','인정점','비고'];
+    const rows = resultsData.map(data => [
+        data.id,
+        data.grade,
+        data.class,
+        data.number,
+        data.name,
+        data.subject,
+        data.examType,
+        data.detailName,
+        data.absenceReason,
+        data.recognitionRate,
+        data.calculationBasis,
+        Number(data.baseScore),
+        Number(data.finalScore),
+        data.remarks
+    ]);
+
+    const worksheet = XLSX.utils.aoa_to_sheet([headers, ...rows]);
+    worksheet['!cols'] = headers.map(h => ({ wch: Math.max(10, h.length + 2) }));
+
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "결과");
+
+    XLSX.writeFile(workbook, "결시자_인정점.xlsx");
+}
         function resetForm() {
             currentExamType = '';
             currentMethod = '';
