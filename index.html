@@ -1,14 +1,11 @@
 <!DOCTYPE html>
 <html lang="ko">
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>일광중학교 결시자 인정점 계산기</title>
     <script src="https://cdn.tailwindcss.com"></script>
-
-    <!-- ✅ Excel 저장 기능 추가 -->
-    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
-
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@300;400;500;600;700&display=swap');
         body { font-family: 'Noto Sans KR', sans-serif; }
@@ -20,12 +17,11 @@
         }
     </style>
 </head>
-
 <body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen p-4">
     <div class="max-w-4xl mx-auto">
         <div class="bg-white rounded-2xl shadow-xl p-8 mb-6">
             <h1 class="text-3xl font-bold text-gray-800 text-center mb-2">🏫 일광중학교 결시자 인정점 계산기</h1>
-            <p class="text-gray-600 text-center mb-8">인정점 계산을 보다 편리하게😊</p>
+            <p class="text-gray-600 text-center mb-8">편리한 인정점 계산을 위해 과정부에서 제작하였습니다😊</p>
             
             <!-- 학년/과목 선택 -->
             <div class="mb-8">
@@ -82,7 +78,7 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6" id="written-exam-averages">
                         <div class="bg-white rounded-lg p-4 border border-blue-200">
                             <h3 class="font-semibold text-blue-800 mb-2">중간고사 평균</h3>
-                            <div class="flex items-center space-x-2">
+                            <div class="flex items-center space-x-2 mb-2">
                                 <input type="number" step="0.1" id="saved-midterm-avg" placeholder="예: 75.5" 
                                        class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                                        onchange="saveAverage('midterm', this.value)">
@@ -91,14 +87,32 @@
                                     삭제
                                 </button>
                             </div>
+                            <div class="flex items-center space-x-2">
+                                <input type="number" step="0.1" id="saved-midterm-min" placeholder="최하점 (예: 40)" 
+                                       class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                       onchange="saveMinScore('midterm', this.value)">
+                                <button type="button" onclick="clearMinScore('midterm')" 
+                                        class="bg-gray-400 hover:bg-gray-500 text-white px-2 py-1 rounded text-xs">
+                                    삭제
+                                </button>
+                            </div>
                         </div>
                         <div class="bg-white rounded-lg p-4 border border-blue-200">
                             <h3 class="font-semibold text-blue-800 mb-2">기말고사 평균</h3>
-                            <div class="flex items-center space-x-2">
+                            <div class="flex items-center space-x-2 mb-2">
                                 <input type="number" step="0.1" id="saved-final-avg" placeholder="예: 78.2" 
                                        class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
                                        onchange="saveAverage('final', this.value)">
                                 <button type="button" onclick="clearAverage('final')" 
+                                        class="bg-gray-400 hover:bg-gray-500 text-white px-2 py-1 rounded text-xs">
+                                    삭제
+                                </button>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <input type="number" step="0.1" id="saved-final-min" placeholder="최하점 (예: 40)" 
+                                       class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
+                                       onchange="saveMinScore('final', this.value)">
+                                <button type="button" onclick="clearMinScore('final')" 
                                         class="bg-gray-400 hover:bg-gray-500 text-white px-2 py-1 rounded text-xs">
                                     삭제
                                 </button>
@@ -110,7 +124,7 @@
                     <div class="grid grid-cols-1 gap-4 mb-6 hidden" id="english-listening-average">
                         <div class="bg-white rounded-lg p-4 border border-orange-200">
                             <h3 class="font-semibold text-orange-800 mb-2">🎧 영어듣기 평균</h3>
-                            <div class="flex items-center space-x-2">
+                            <div class="flex items-center space-x-2 mb-2">
                                 <input type="number" step="0.1" id="saved-listening-avg" placeholder="예: 82.5" 
                                        class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
                                        onchange="saveAverage('englishListening', this.value)">
@@ -119,11 +133,20 @@
                                     삭제
                                 </button>
                             </div>
+                            <div class="flex items-center space-x-2">
+                                <input type="number" step="0.1" id="saved-listening-min" placeholder="최하점 (예: 40)" 
+                                       class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500"
+                                       onchange="saveMinScore('englishListening', this.value)">
+                                <button type="button" onclick="clearMinScore('englishListening')" 
+                                        class="bg-gray-400 hover:bg-gray-500 text-white px-2 py-1 rounded text-xs">
+                                    삭제
+                                </button>
+                            </div>
                         </div>
                     </div>
                     
-                    <!-- 수행평가 평균 (음악/미술/체육 과목 선택 시에만 표시) -->
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 hidden" id="performance-averages">
+                    <!-- 수행평가 평균 (모든 과목에서 표시) -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6" id="performance-averages">
                         <div class="bg-white rounded-lg p-4 border border-purple-200">
                             <h3 class="font-semibold text-purple-800 mb-2">🎨 <span id="performance1-title">수행평가 1</span></h3>
                             <div class="mb-2">
@@ -131,11 +154,20 @@
                                        class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
                                        onchange="savePerformanceAreaName('performance1', this.value)">
                             </div>
-                            <div class="flex items-center space-x-2">
+                            <div class="flex items-center space-x-2 mb-2">
                                 <input type="number" step="0.1" id="saved-performance1-avg" placeholder="예: 85.0" 
                                        class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
                                        onchange="saveAverage('performance1', this.value)">
                                 <button type="button" onclick="clearPerformanceArea('performance1')" 
+                                        class="bg-gray-400 hover:bg-gray-500 text-white px-2 py-1 rounded text-xs">
+                                    삭제
+                                </button>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <input type="number" step="0.1" id="saved-performance1-min" placeholder="최하점 (예: 40)" 
+                                       class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                                       onchange="saveMinScore('performance1', this.value)">
+                                <button type="button" onclick="clearMinScore('performance1')" 
                                         class="bg-gray-400 hover:bg-gray-500 text-white px-2 py-1 rounded text-xs">
                                     삭제
                                 </button>
@@ -148,11 +180,20 @@
                                        class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
                                        onchange="savePerformanceAreaName('performance2', this.value)">
                             </div>
-                            <div class="flex items-center space-x-2">
+                            <div class="flex items-center space-x-2 mb-2">
                                 <input type="number" step="0.1" id="saved-performance2-avg" placeholder="예: 87.5" 
                                        class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
                                        onchange="saveAverage('performance2', this.value)">
                                 <button type="button" onclick="clearPerformanceArea('performance2')" 
+                                        class="bg-gray-400 hover:bg-gray-500 text-white px-2 py-1 rounded text-xs">
+                                    삭제
+                                </button>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <input type="number" step="0.1" id="saved-performance2-min" placeholder="최하점 (예: 40)" 
+                                       class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                                       onchange="saveMinScore('performance2', this.value)">
+                                <button type="button" onclick="clearMinScore('performance2')" 
                                         class="bg-gray-400 hover:bg-gray-500 text-white px-2 py-1 rounded text-xs">
                                     삭제
                                 </button>
@@ -165,11 +206,46 @@
                                        class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
                                        onchange="savePerformanceAreaName('performance3', this.value)">
                             </div>
-                            <div class="flex items-center space-x-2">
+                            <div class="flex items-center space-x-2 mb-2">
                                 <input type="number" step="0.1" id="saved-performance3-avg" placeholder="예: 83.2" 
                                        class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
                                        onchange="saveAverage('performance3', this.value)">
                                 <button type="button" onclick="clearPerformanceArea('performance3')" 
+                                        class="bg-gray-400 hover:bg-gray-500 text-white px-2 py-1 rounded text-xs">
+                                    삭제
+                                </button>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <input type="number" step="0.1" id="saved-performance3-min" placeholder="최하점 (예: 40)" 
+                                       class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                                       onchange="saveMinScore('performance3', this.value)">
+                                <button type="button" onclick="clearMinScore('performance3')" 
+                                        class="bg-gray-400 hover:bg-gray-500 text-white px-2 py-1 rounded text-xs">
+                                    삭제
+                                </button>
+                            </div>
+                        </div>
+                        <div class="bg-white rounded-lg p-4 border border-purple-200">
+                            <h3 class="font-semibold text-purple-800 mb-2">🎨 <span id="performance4-title">수행평가 4</span></h3>
+                            <div class="mb-2">
+                                <input type="text" id="saved-performance4-name" placeholder="영역명 (예: 포트폴리오)" 
+                                       class="w-full px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                                       onchange="savePerformanceAreaName('performance4', this.value)">
+                            </div>
+                            <div class="flex items-center space-x-2 mb-2">
+                                <input type="number" step="0.1" id="saved-performance4-avg" placeholder="예: 88.3" 
+                                       class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                                       onchange="saveAverage('performance4', this.value)">
+                                <button type="button" onclick="clearPerformanceArea('performance4')" 
+                                        class="bg-gray-400 hover:bg-gray-500 text-white px-2 py-1 rounded text-xs">
+                                    삭제
+                                </button>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <input type="number" step="0.1" id="saved-performance4-min" placeholder="최하점 (예: 40)" 
+                                       class="flex-1 px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500"
+                                       onchange="saveMinScore('performance4', this.value)">
+                                <button type="button" onclick="clearMinScore('performance4')" 
                                         class="bg-gray-400 hover:bg-gray-500 text-white px-2 py-1 rounded text-xs">
                                     삭제
                                 </button>
@@ -293,22 +369,21 @@
                 <div class="bg-gradient-to-r from-green-50 to-emerald-50 border-2 border-green-200 rounded-xl p-6">
                     <div class="flex justify-between items-center mb-4">
                         <h3 class="text-xl font-semibold text-green-800">📊 계산 결과</h3>
-                       <div class="space-x-2">
-    <button type="button" onclick="copyResults()" 
-            class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200">
-        복사하기
-    </button>
-    <!-- ✅ Excel 저장 버튼 추가 -->
-    <button type="button" onclick="downloadXLSX()" 
-            class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200">
-        Excel 저장
-    </button>
-    <button type="button" onclick="clearResults()" 
-            class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200">
-        전체 삭제
-    </button>
-</div>
+                        <div class="space-x-2">
+                            <button type="button" onclick="copyResults()" 
+                                    class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200">
+                                복사하기
+                            </button><!-- ✅ Excel 저장 버튼 -->
+<button type="button" onclick="downloadExcel()" 
+        class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200">
+    Excel 저장
+</button>
 
+                            <button type="button" onclick="clearResults()" 
+                                    class="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200">
+                                전체 삭제
+                            </button>
+                        </div>
                     </div>
                     <div class="overflow-x-auto">
                         <table id="results-table" class="w-full border-collapse border border-gray-300 bg-white rounded-lg overflow-hidden shadow-sm">
@@ -371,6 +446,52 @@
                 <button type="button" onclick="applyCalculation()" 
                         class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-all duration-200">
                     적용
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 저장된 수행평가 선택 모달 -->
+    <div id="performance-dropdown-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-50 flex items-center justify-center">
+        <div class="bg-white rounded-2xl shadow-2xl p-6 max-w-md w-full mx-4">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-gray-800">저장된 수행평가 선택</h3>
+                <button type="button" onclick="closePerformanceDropdown()" class="text-gray-500 hover:text-gray-700">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <div id="performance-dropdown-content" class="space-y-2 max-h-60 overflow-y-auto">
+                <!-- 동적으로 생성됩니다 -->
+            </div>
+            <div class="flex justify-end mt-4">
+                <button type="button" onclick="closePerformanceDropdown()" 
+                        class="px-4 py-2 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-all duration-200">
+                    취소
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 계산기 내 저장된 값 선택 모달 -->
+    <div id="calculator-saved-values-modal" class="fixed inset-0 bg-black bg-opacity-50 hidden z-[60] flex items-center justify-center">
+        <div class="bg-white rounded-2xl shadow-2xl p-6 max-w-lg w-full mx-4 max-h-[80vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-gray-800">저장된 수행평가 값 선택</h3>
+                <button type="button" onclick="closeCalculatorSavedValues()" class="text-gray-500 hover:text-gray-700">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+            <div id="calculator-saved-values-content" class="space-y-3">
+                <!-- 동적으로 생성됩니다 -->
+            </div>
+            <div class="flex justify-end mt-4">
+                <button type="button" onclick="closeCalculatorSavedValues()" 
+                        class="px-4 py-2 text-gray-600 bg-gray-100 hover:bg-gray-200 rounded-lg transition-all duration-200">
+                    취소
                 </button>
             </div>
         </div>
@@ -471,6 +592,7 @@
         let currentCalculatorTarget = '';
         let currentCalculatorType = '';
         let calculatorScores = [];
+        let currentDropdownTarget = '';
         
         // 저장된 평균 점수들
         let savedAverages = {
@@ -480,14 +602,28 @@
             englishListening: null,
             performance1: null,
             performance2: null,
-            performance3: null
+            performance3: null,
+            performance4: null
+        };
+        
+        // 저장된 최하점들
+        let savedMinScores = {
+            midterm: null,
+            final: null,
+            performance: {},
+            englishListening: null,
+            performance1: null,
+            performance2: null,
+            performance3: null,
+            performance4: null
         };
         
         // 저장된 수행평가 영역명들
         let savedPerformanceAreaNames = {
             performance1: null,
             performance2: null,
-            performance3: null
+            performance3: null,
+            performance4: null
         };
 
 
@@ -523,8 +659,6 @@
             
             // 평균 점수 관리 영역 표시/숨김
             if (isPerformanceOnlySubject) {
-                writtenExamAverages.classList.add('hidden');
-                performanceAverages.classList.remove('hidden');
                 midtermBtn.disabled = true;
                 finalBtn.disabled = true;
                 midtermBtn.classList.add('opacity-50', 'cursor-not-allowed');
@@ -532,8 +666,6 @@
                 performanceNotice.classList.remove('hidden');
                 selectExamType('performance');
             } else {
-                writtenExamAverages.classList.remove('hidden');
-                performanceAverages.classList.add('hidden');
                 midtermBtn.disabled = false;
                 finalBtn.disabled = false;
                 midtermBtn.classList.remove('opacity-50', 'cursor-not-allowed');
@@ -746,61 +878,74 @@
                         { id: 'final-min', label: '기말고사 최하점', placeholder: '예: 40' }
                     ];
                 }
-            } else if (examType === 'performance') {
-                if (method === 'other-performance') {
-                    fields = [
-                        { id: 'student-performance-areas', label: '해당 학생의 다른 수행평가 점수들', placeholder: '학생이 응시한 영역들의 점수', hasCalculator: true, calculatorType: 'student-performance-areas', description: '결시하지 않은 다른 수행평가 영역에서 해당 학생이 받은 점수들 (자동 평균 계산)' },
-                        { id: 'class-performance-areas', label: '전체 학생의 다른 수행평가 평균들', placeholder: '전체 학생들의 해당 영역 평균점수', hasCalculator: true, calculatorType: 'class-performance-areas', description: '결시하지 않은 다른 수행평가 영역에서 전체 학생들의 평균점수들 (자동 평균 계산)' },
-                        { id: 'absent-performance-avg', label: '전체 학생의 결시한 수행평가 평균', placeholder: '예: 82.3', description: '결시한 수행평가 영역에서 전체 학생들의 평균점수' },
-                        { id: 'absent-performance-name', label: '결시한 수행평가 영역명', placeholder: '예: 포트폴리오', type: 'text', description: '학생이 결시한 수행평가 영역의 이름' }
-                    ];
-                } else if (method === 'written-exam') {
-                    fields = [
-                        { id: 'midterm-score', label: '해당 학생의 중간고사 점수', placeholder: '예: 82 (없으면 0)', description: '해당 학생이 중간고사에서 받은 점수 (응시하지 않았으면 0 입력)' },
-                        { id: 'midterm-avg', label: '전체 학생의 중간고사 평균', placeholder: '예: 75.5 (없으면 0)', description: '전체 학생들의 중간고사 평균점수 (실시하지 않았으면 0 입력)' },
-                        { id: 'final-score', label: '해당 학생의 기말고사 점수', placeholder: '예: 85 (없으면 0)', description: '해당 학생이 기말고사에서 받은 점수 (응시하지 않았으면 0 입력)' },
-                        { id: 'final-avg', label: '전체 학생의 기말고사 평균', placeholder: '예: 78.2 (없으면 0)', description: '전체 학생들의 기말고사 평균점수 (실시하지 않았으면 0 입력)' },
-                        { id: 'absent-performance-avg', label: '전체 학생의 결시한 수행평가 평균', placeholder: '예: 82.3', description: '결시한 수행평가 영역에서 전체 학생들의 평균점수' },
-                        { id: 'absent-performance-name', label: '결시한 수행평가 영역명', placeholder: '예: 포트폴리오', type: 'text', description: '학생이 결시한 수행평가 영역의 이름' }
-                    ];
-                } else if (method === 'no-score') {
-                    fields = [
-                        { id: 'performance-min', label: '수행평가 최하점', placeholder: '예: 40' },
-                        { id: 'absent-performance-name', label: '결시한 수행평가 영역명', placeholder: '예: 포트폴리오', type: 'text' }
-                    ];
-                }
-            }
+           else if (examType === 'performance') {
+    if (method === 'other-performance') {
+        fields = [
+            { id: 'student-performance-areas', label: '해당 학생의 다른 수행평가 점수들', placeholder: '학생이 응시한 영역들의 점수', hasCalculator: true, calculatorType: 'student-performance-areas' },
+            { id: 'class-performance-areas', label: '전체 학생의 다른 수행평가 평균들', placeholder: '전체 학생들의 해당 영역 평균점수', hasCalculator: true, calculatorType: 'class-performance-areas' },
 
-            fields.forEach(field => {
-                const fieldDiv = document.createElement('div');
-                const inputType = field.type === 'text' ? 'text' : 'number';
-                const stepAttr = field.type === 'text' ? '' : 'step="0.1"';
+            // ✨ 요 두 줄이 나란히 묶임
+            { id: 'absent-performance-name', label: '결시한 수행평가 영역명', placeholder: '예: 포트폴리오', type: 'text', pairWith: 'absent-performance-avg' },
+            { id: 'absent-performance-avg', label: '결시한 수행평가 학년 평균', placeholder: '예: 82.3', pairWith: 'absent-performance-name' }
+        ];
+    } else if (method === 'written-exam') {
+        fields = [
+            { id: 'midterm-score', label: '해당 학생의 중간고사 점수', placeholder: '예: 82 (없으면 0)' },
+            { id: 'midterm-avg', label: '전체 학생의 중간고사 평균', placeholder: '예: 75.5' },
+            { id: 'final-score', label: '해당 학생의 기말고사 점수', placeholder: '예: 85 (없으면 0)' },
+            { id: 'final-avg', label: '전체 학생의 기말고사 평균', placeholder: '예: 78.2' },
+
+            // ✨ 요 두 줄이 나란히 묶임
+            { id: 'absent-performance-name', label: '결시한 수행평가 영역명', placeholder: '예: 포트폴리오', type: 'text', pairWith: 'absent-performance-avg' },
+            { id: 'absent-performance-avg', label: '결시한 수행평가 학년 평균', placeholder: '예: 82.3', pairWith: 'absent-performance-name' }
+        ];
+    } else if (method === 'no-score') {
+        fields = [
+            { id: 'performance-min', label: '수행평가 최하점', placeholder: '예: 40' },
+
+            // ✨ 요 두 줄이 나란히 묶임
+            { id: 'absent-performance-name', label: '결시한 수행평가 영역명', placeholder: '예: 포트폴리오', type: 'text', pairWith: 'absent-performance-avg' },
+            { id: 'absent-performance-avg', label: '결시한 수행평가 학년 평균', placeholder: '예: 82.3', pairWith: 'absent-performance-name' }
+        ];
+    }
+}
+
+fields.forEach(field => {
+  const fieldDiv = document.createElement('div');
+  
+  // pairWith 속성이 있으면 → 두 칸짜리 레이아웃으로
+  fieldDiv.className = (field.pairWith ? "grid grid-cols-2 gap-4 items-center" : "mb-4");
+
+  if (field.pairWith) {
+    // 나란히 두 칸 배치
+    fieldDiv.innerHTML = `
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">${field.label}</label>
+        <input type="${field.type || 'text'}" id="${field.id}" placeholder="${field.placeholder}" 
+               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+      </div>
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">${fields.find(f => f.id === field.pairWith).label}</label>
+        <input type="number" step="0.1" id="${field.pairWith}" placeholder="${fields.find(f => f.id === field.pairWith).placeholder}" 
+               class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500">
+      </div>
+    `;
+  } else {
+    // 일반 필드는 기존처럼 세로 1칸
+    fieldDiv.innerHTML = `
+      <label class="block text-sm font-medium text-gray-700 mb-2">${field.label}</label>
+      <input type="${field.type || 'number'}" id="${field.id}" placeholder="${field.placeholder}" 
+             class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+    `;
+  }
+
+  fieldsDiv.appendChild(fieldDiv);
+});
                 
-                let calculatorButton = '';
-                if (field.hasCalculator) {
-                    calculatorButton = `
-                        <button type="button" onclick="openCalculator('${field.id}', '${field.calculatorType}')" 
-                                class="ml-2 bg-blue-500 hover:bg-blue-600 text-white px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200">
-                            계산기
-                        </button>
-                    `;
+                // 드롭다운 옵션 채우기
+                if (field.hasDropdown) {
+                    populateDropdownOptions(field.id, fieldDiv);
                 }
-                
-                let descriptionHtml = '';
-                if (field.description) {
-                    descriptionHtml = `<p class="text-xs text-gray-500 mt-1">${field.description}</p>`;
-                }
-                
-                fieldDiv.innerHTML = `
-                    <label class="block text-sm font-medium text-gray-700 mb-2">${field.label}</label>
-                    <div class="flex items-center">
-                        <input type="${inputType}" ${stepAttr} id="${field.id}" placeholder="${field.placeholder}" 
-                               class="flex-1 px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200">
-                        ${calculatorButton}
-                    </div>
-                    ${descriptionHtml}
-                `;
-                fieldsDiv.appendChild(fieldDiv);
                 
                 // 저장된 평균값 자동 입력
                 const input = fieldDiv.querySelector('input');
@@ -844,9 +989,32 @@
                         if (subject && this.value && avgValue) {
                             savePerformanceAverage(subject, this.value, avgValue);
                         }
-                        // 기존 저장된 값이 있으면 자동 입력
-                        if (subject && this.value && savedAverages.performance[subject] && savedAverages.performance[subject][this.value]) {
-                            document.getElementById('absent-performance-avg').value = savedAverages.performance[subject][this.value];
+                        
+                        // 영역명이 입력되면 저장된 평균값 자동 입력
+                        if (subject && this.value) {
+                            const avgInput = document.getElementById('absent-performance-avg');
+                            if (avgInput) {
+                                let foundAverage = false;
+                                
+                                // 평균 점수 관리에서 찾기
+                                ['performance1', 'performance2', 'performance3', 'performance4'].forEach(areaType => {
+                                    if (savedPerformanceAreaNames[areaType] === this.value && savedAverages[areaType]) {
+                                        avgInput.value = savedAverages[areaType];
+                                        foundAverage = true;
+                                    }
+                                });
+                                
+                                // 과목별 저장된 값에서 찾기 (평균 점수 관리에서 찾지 못한 경우)
+                                if (!foundAverage && savedAverages.performance[subject] && savedAverages.performance[subject][this.value]) {
+                                    avgInput.value = savedAverages.performance[subject][this.value];
+                                }
+                                
+                                // 평균 드롭다운 옵션도 업데이트
+                                const avgDropdown = avgInput.parentElement.querySelector('select');
+                                if (avgDropdown) {
+                                    populateDropdownOptions('absent-performance-avg', avgInput.parentElement);
+                                }
+                            }
                         }
                     });
                 }
@@ -873,14 +1041,42 @@
                 // 성적 없음 처리 (모든 결시 사유에 대해)
                 if (currentMethod === 'no-score') {
                     let minScore = 0;
+                    let inputElement = null;
+                    
                     if (currentExamType === 'midterm') {
-                        minScore = parseFloat(document.getElementById('midterm-min')?.value);
+                        inputElement = document.getElementById('midterm-min');
+                        // 저장된 값이 있으면 자동 입력
+                        if (savedMinScores.midterm && !inputElement?.value) {
+                            inputElement.value = savedMinScores.midterm;
+                        }
+                        minScore = parseFloat(inputElement?.value);
                     } else if (currentExamType === 'final') {
-                        minScore = parseFloat(document.getElementById('final-min')?.value);
+                        inputElement = document.getElementById('final-min');
+                        // 저장된 값이 있으면 자동 입력
+                        if (savedMinScores.final && !inputElement?.value) {
+                            inputElement.value = savedMinScores.final;
+                        }
+                        minScore = parseFloat(inputElement?.value);
                     } else if (currentExamType === 'performance') {
-                        minScore = parseFloat(document.getElementById('performance-min')?.value);
+                        inputElement = document.getElementById('performance-min');
+                        // 수행평가 최하점은 저장된 값 중에서 찾기
+                        const areaName = document.getElementById('absent-performance-name')?.value;
+                        if (areaName) {
+                            // 평균 점수 관리에서 찾기
+                            ['performance1', 'performance2', 'performance3', 'performance4'].forEach(areaType => {
+                                if (savedPerformanceAreaNames[areaType] === areaName && savedMinScores[areaType] && !inputElement?.value) {
+                                    inputElement.value = savedMinScores[areaType];
+                                }
+                            });
+                        }
+                        minScore = parseFloat(inputElement?.value);
                     } else if (currentExamType === 'english-listening') {
-                        minScore = parseFloat(document.getElementById('listening-min')?.value);
+                        inputElement = document.getElementById('listening-min');
+                        // 저장된 값이 있으면 자동 입력
+                        if (savedMinScores.englishListening && !inputElement?.value) {
+                            inputElement.value = savedMinScores.englishListening;
+                        }
+                        minScore = parseFloat(inputElement?.value);
                     }
                     
                     if (isNaN(minScore) || minScore <= 0) {
@@ -1234,38 +1430,7 @@
                 alert('데이터가 클립보드에 복사되었습니다!\nExcel에 붙여넣기(Ctrl+V)하세요.');
             });
         }
-function downloadXLSX() {
-    if (resultsData.length === 0) {
-        alert('저장할 데이터가 없습니다.');
-        return;
-    }
 
-    const headers = ['번호','학년','반','학번','이름','과목','결시시험','세부명','결시사유','인정비율','산출기준','기준점','인정점','비고'];
-    const rows = resultsData.map(data => [
-        data.id,
-        data.grade,
-        data.class,
-        data.number,
-        data.name,
-        data.subject,
-        data.examType,
-        data.detailName,
-        data.absenceReason,
-        data.recognitionRate,
-        data.calculationBasis,
-        Number(data.baseScore),
-        Number(data.finalScore),
-        data.remarks
-    ]);
-
-    const worksheet = XLSX.utils.aoa_to_sheet([headers, ...rows]);
-    worksheet['!cols'] = headers.map(h => ({ wch: Math.max(10, h.length + 2) }));
-
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "결과");
-
-    XLSX.writeFile(workbook, "결시자_인정점.xlsx");
-}
         function resetForm() {
             currentExamType = '';
             currentMethod = '';
@@ -1510,6 +1675,13 @@ function downloadXLSX() {
                 content.innerHTML = `
                     <div class="space-y-4">
                         <p class="text-sm text-gray-600">전체 학생들이 결시하지 않은 수행평가 영역별 평균 점수를 입력하세요. (최대 4개 영역)</p>
+                        <div class="mb-4">
+                            <label class="block text-sm font-medium text-gray-700 mb-2">📋 저장된 값에서 선택하기</label>
+                            <select onchange="addSavedValueToCalculatorFromDropdown(this)" 
+                                    class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500">
+                                <option value="">선택하세요...</option>
+                            </select>
+                        </div>
                         <div id="class-areas-container">
                             <div class="class-area-item flex items-center space-x-2 mb-2">
                                 <input type="text" placeholder="영역명 (예: 말하기)" 
@@ -1536,6 +1708,7 @@ function downloadXLSX() {
                 `;
                 
                 updateClassAreas();
+                populateCalculatorDropdown();
                 
             } else if (calculatorType === 'other-performance-avg') {
                 title.textContent = '전체 학생의 다른 수행평가 평균 계산기';
@@ -1972,9 +2145,30 @@ function downloadXLSX() {
             updateSavedAveragesDisplay();
         }
 
+        function saveMinScore(type, value) {
+            const numValue = parseFloat(value);
+            if (numValue > 0) {
+                savedMinScores[type] = numValue;
+            }
+        }
+
+        function clearMinScore(type) {
+            savedMinScores[type] = null;
+            document.getElementById(`saved-${type === 'englishListening' ? 'listening' : type}-min`).value = '';
+        }
+
         function clearAllAverages() {
-            if (confirm('저장된 모든 평균 점수를 삭제하시겠습니까?')) {
+            if (confirm('저장된 모든 평균 점수와 최하점을 삭제하시겠습니까?')) {
                 savedAverages = {
+                    midterm: null,
+                    final: null,
+                    performance: {},
+                    englishListening: null,
+                    performance1: null,
+                    performance2: null,
+                    performance3: null
+                };
+                savedMinScores = {
                     midterm: null,
                     final: null,
                     performance: {},
@@ -1986,20 +2180,29 @@ function downloadXLSX() {
                 savedPerformanceAreaNames = {
                     performance1: null,
                     performance2: null,
-                    performance3: null
+                    performance3: null,
+                    performance4: null
                 };
-                document.getElementById('saved-midterm-avg').value = '';
-                document.getElementById('saved-final-avg').value = '';
-                document.getElementById('saved-listening-avg').value = '';
-                document.getElementById('saved-performance1-avg').value = '';
-                document.getElementById('saved-performance2-avg').value = '';
-                document.getElementById('saved-performance3-avg').value = '';
-                document.getElementById('saved-performance1-name').value = '';
-                document.getElementById('saved-performance2-name').value = '';
-                document.getElementById('saved-performance3-name').value = '';
+                
+                // 안전하게 요소 값 초기화
+                const elementsToReset = [
+                    'saved-midterm-avg', 'saved-final-avg', 'saved-listening-avg',
+                    'saved-performance1-avg', 'saved-performance2-avg', 'saved-performance3-avg', 'saved-performance4-avg',
+                    'saved-performance1-name', 'saved-performance2-name', 'saved-performance3-name', 'saved-performance4-name',
+                    'saved-midterm-min', 'saved-final-min', 'saved-listening-min',
+                    'saved-performance1-min', 'saved-performance2-min', 'saved-performance3-min', 'saved-performance4-min'
+                ];
+                
+                elementsToReset.forEach(elementId => {
+                    const element = document.getElementById(elementId);
+                    if (element) {
+                        element.value = '';
+                    }
+                });
+                
                 updatePerformanceAreaTitles();
                 updateSavedAveragesDisplay();
-                alert('모든 평균 점수가 삭제되었습니다.');
+                alert('모든 평균 점수와 최하점이 삭제되었습니다.');
             }
         }
         
@@ -2012,15 +2215,23 @@ function downloadXLSX() {
         
         function clearPerformanceArea(areaType) {
             savedAverages[areaType] = null;
+            savedMinScores[areaType] = null;
             savedPerformanceAreaNames[areaType] = null;
-            document.getElementById(`saved-${areaType}-avg`).value = '';
-            document.getElementById(`saved-${areaType}-name`).value = '';
+            
+            const avgElement = document.getElementById(`saved-${areaType}-avg`);
+            const minElement = document.getElementById(`saved-${areaType}-min`);
+            const nameElement = document.getElementById(`saved-${areaType}-name`);
+            
+            if (avgElement) avgElement.value = '';
+            if (minElement) minElement.value = '';
+            if (nameElement) nameElement.value = '';
+            
             updatePerformanceAreaTitles();
             updateSavedAveragesDisplay();
         }
         
         function updatePerformanceAreaTitles() {
-            ['performance1', 'performance2', 'performance3'].forEach(areaType => {
+            ['performance1', 'performance2', 'performance3', 'performance4'].forEach(areaType => {
                 const titleElement = document.getElementById(`${areaType}-title`);
                 const savedName = savedPerformanceAreaNames[areaType];
                 if (savedName) {
@@ -2029,7 +2240,8 @@ function downloadXLSX() {
                     const defaultNames = {
                         'performance1': '수행평가 1',
                         'performance2': '수행평가 2',
-                        'performance3': '수행평가 3'
+                        'performance3': '수행평가 3',
+                        'performance4': '수행평가 4'
                     };
                     titleElement.textContent = defaultNames[areaType];
                 }
@@ -2184,6 +2396,7 @@ function downloadXLSX() {
             if (container.children.length > 1) {
                 button.parentElement.remove();
                 updateClassAreas();
+                populateCalculatorDropdown();
             }
         }
 
@@ -2209,6 +2422,421 @@ function downloadXLSX() {
             } else {
                 resultSpan.textContent = '-';
             }
+        }
+
+        // 드롭다운 옵션 채우기 함수
+        function populateDropdownOptions(fieldId, fieldDiv) {
+            const dropdown = fieldDiv.querySelector('select');
+            if (!dropdown) return;
+            
+            // 기존 옵션들 제거 (첫 번째 옵션 제외)
+            while (dropdown.children.length > 1) {
+                dropdown.removeChild(dropdown.lastChild);
+            }
+            
+            const currentSubject = document.getElementById('student-subject').value;
+            
+            if (fieldId === 'absent-performance-name') {
+                // 영역명 선택
+                const savedNames = new Set();
+                
+                // 평균 점수 관리에서 저장된 영역명들 추가
+                ['performance1', 'performance2', 'performance3', 'performance4'].forEach(areaType => {
+                    const savedName = savedPerformanceAreaNames[areaType];
+                    if (savedName) {
+                        savedNames.add(savedName);
+                    }
+                });
+                
+                if (savedNames.size > 0) {
+                    Array.from(savedNames).forEach(areaName => {
+                        const option = document.createElement('option');
+                        option.value = areaName;
+                        option.textContent = areaName;
+                        dropdown.appendChild(option);
+                    });
+                }
+            } else if (fieldId === 'absent-performance-avg') {
+                // 평균 점수 선택 - 평균 점수 관리에서만 가져오기
+                const availableAverages = [];
+                
+                // 평균 점수 관리에서 저장된 값들만 추가
+                ['performance1', 'performance2', 'performance3', 'performance4'].forEach(areaType => {
+                    const savedName = savedPerformanceAreaNames[areaType];
+                    const savedAvg = savedAverages[areaType];
+                    if (savedName && savedAvg) {
+                        availableAverages.push({ name: savedName, avg: savedAvg });
+                    }
+                });
+                
+                if (availableAverages.length > 0) {
+                    availableAverages.forEach(item => {
+                        const option = document.createElement('option');
+                        option.value = `${item.name}|${item.avg}`;
+                        option.textContent = `${item.name} (${item.avg}점)`;
+                        dropdown.appendChild(option);
+                    });
+                }
+            }
+        }
+        
+        // 드롭다운에서 값 선택 함수
+        function selectSavedValue(fieldId, dropdown) {
+            if (!dropdown.value) return;
+            
+            if (fieldId === 'absent-performance-name') {
+                const input = document.getElementById(fieldId);
+                if (input) {
+                    input.value = dropdown.value;
+                    
+                    // 영역명을 선택했을 때 해당 평균값도 자동으로 채우기
+                    const avgInput = document.getElementById('absent-performance-avg');
+                    if (avgInput) {
+                        const currentSubject = document.getElementById('student-subject').value;
+                        let foundAverage = false;
+                        
+                        // 평균 점수 관리에서 찾기
+                        ['performance1', 'performance2', 'performance3', 'performance4'].forEach(areaType => {
+                            if (savedPerformanceAreaNames[areaType] === dropdown.value && savedAverages[areaType]) {
+                                avgInput.value = savedAverages[areaType];
+                                foundAverage = true;
+                                // 평균 드롭다운도 업데이트
+                                const avgDropdown = avgInput.parentElement.querySelector('select');
+                                if (avgDropdown) {
+                                    // 드롭다운 옵션 다시 채우기
+                                    populateDropdownOptions('absent-performance-avg', avgInput.parentElement);
+                                    avgDropdown.value = `${dropdown.value}|${savedAverages[areaType]}`;
+                                }
+                            }
+                        });
+                        
+                        // 과목별 저장된 값에서 찾기 (평균 점수 관리에서 찾지 못한 경우)
+                        if (!foundAverage && savedAverages.performance[currentSubject] && savedAverages.performance[currentSubject][dropdown.value]) {
+                            avgInput.value = savedAverages.performance[currentSubject][dropdown.value];
+                            // 평균 드롭다운도 업데이트
+                            const avgDropdown = avgInput.parentElement.querySelector('select');
+                            if (avgDropdown) {
+                                // 드롭다운 옵션 다시 채우기
+                                populateDropdownOptions('absent-performance-avg', avgInput.parentElement);
+                                avgDropdown.value = `${dropdown.value}|${savedAverages.performance[currentSubject][dropdown.value]}`;
+                            }
+                        }
+                    }
+                }
+            } else if (fieldId === 'absent-performance-avg') {
+                const [areaName, avg] = dropdown.value.split('|');
+                const avgInput = document.getElementById(fieldId);
+                const nameInput = document.getElementById('absent-performance-name');
+                
+                if (avgInput) {
+                    avgInput.value = avg;
+                }
+                if (nameInput && !nameInput.value) {
+                    nameInput.value = areaName;
+                    // 영역명 드롭다운도 업데이트
+                    const nameDropdown = nameInput.parentElement.querySelector('select');
+                    if (nameDropdown) {
+                        nameDropdown.value = areaName;
+                    }
+                }
+            }
+            
+            // 드롭다운 초기화
+            dropdown.value = '';
+        }
+
+        // 저장된 수행평가 드롭다운 함수들
+        function showSavedPerformanceDropdown(targetId) {
+            currentDropdownTarget = targetId;
+            const modal = document.getElementById('performance-dropdown-modal');
+            const content = document.getElementById('performance-dropdown-content');
+            
+            content.innerHTML = '';
+            
+            // 현재 선택된 과목 확인
+            const currentSubject = document.getElementById('student-subject').value;
+            
+            if (targetId === 'absent-performance-name') {
+                // 영역명 선택
+                const savedNames = new Set();
+                
+                // 평균 점수 관리에서 저장된 영역명들 추가
+                ['performance1', 'performance2', 'performance3'].forEach(areaType => {
+                    const savedName = savedPerformanceAreaNames[areaType];
+                    if (savedName) {
+                        savedNames.add(savedName);
+                    }
+                });
+                
+                // 과목별 저장된 수행평가 영역명들 추가
+                if (savedAverages.performance[currentSubject]) {
+                    Object.keys(savedAverages.performance[currentSubject]).forEach(areaName => {
+                        savedNames.add(areaName);
+                    });
+                }
+                
+                if (savedNames.size === 0) {
+                    content.innerHTML = '<p class="text-gray-500 text-center py-4">저장된 수행평가 영역이 없습니다.</p>';
+                } else {
+                    Array.from(savedNames).forEach(areaName => {
+                        const button = document.createElement('button');
+                        button.className = 'w-full text-left px-4 py-3 bg-gray-50 hover:bg-blue-50 rounded-lg transition-all duration-200 border border-gray-200 hover:border-blue-300';
+                        button.textContent = areaName;
+                        button.onclick = () => selectPerformanceArea(areaName);
+                        content.appendChild(button);
+                    });
+                }
+            } else if (targetId === 'absent-performance-avg') {
+                // 평균 점수 선택
+                const availableAverages = [];
+                
+                // 평균 점수 관리에서 저장된 값들 추가
+                ['performance1', 'performance2', 'performance3', 'performance4'].forEach(areaType => {
+                    const savedName = savedPerformanceAreaNames[areaType];
+                    const savedAvg = savedAverages[areaType];
+                    if (savedName && savedAvg) {
+                        availableAverages.push({ name: savedName, avg: savedAvg });
+                    }
+                });
+                
+                // 과목별 저장된 수행평가 평균들 추가
+                if (savedAverages.performance[currentSubject]) {
+                    Object.entries(savedAverages.performance[currentSubject]).forEach(([areaName, avg]) => {
+                        // 중복 제거
+                        if (!availableAverages.find(item => item.name === areaName)) {
+                            availableAverages.push({ name: areaName, avg: avg });
+                        }
+                    });
+                }
+                
+                if (availableAverages.length === 0) {
+                    content.innerHTML = '<p class="text-gray-500 text-center py-4">저장된 수행평가 평균이 없습니다.</p>';
+                } else {
+                    availableAverages.forEach(item => {
+                        const button = document.createElement('button');
+                        button.className = 'w-full text-left px-4 py-3 bg-gray-50 hover:bg-blue-50 rounded-lg transition-all duration-200 border border-gray-200 hover:border-blue-300';
+                        button.innerHTML = `
+                            <div class="font-medium">${item.name}</div>
+                            <div class="text-sm text-gray-600">${item.avg}점</div>
+                        `;
+                        button.onclick = () => selectPerformanceAverage(item.name, item.avg);
+                        content.appendChild(button);
+                    });
+                }
+            }
+            
+            modal.classList.remove('hidden');
+        }
+        
+        function selectPerformanceArea(areaName) {
+            const input = document.getElementById(currentDropdownTarget);
+            if (input) {
+                input.value = areaName;
+                
+                // 영역명을 선택했을 때 해당 평균값도 자동으로 채우기
+                const avgInput = document.getElementById('absent-performance-avg');
+                if (avgInput) {
+                    const currentSubject = document.getElementById('student-subject').value;
+                    
+                    // 평균 점수 관리에서 찾기
+                    ['performance1', 'performance2', 'performance3', 'performance4'].forEach(areaType => {
+                        if (savedPerformanceAreaNames[areaType] === areaName && savedAverages[areaType]) {
+                            avgInput.value = savedAverages[areaType];
+                        }
+                    });
+                    
+                    // 과목별 저장된 값에서 찾기
+                    if (savedAverages.performance[currentSubject] && savedAverages.performance[currentSubject][areaName]) {
+                        avgInput.value = savedAverages.performance[currentSubject][areaName];
+                    }
+                }
+            }
+            closePerformanceDropdown();
+        }
+        
+        function selectPerformanceAverage(areaName, avg) {
+            const avgInput = document.getElementById('absent-performance-avg');
+            const nameInput = document.getElementById('absent-performance-name');
+            
+            if (avgInput) {
+                avgInput.value = avg;
+            }
+            if (nameInput && !nameInput.value) {
+                nameInput.value = areaName;
+            }
+            
+            closePerformanceDropdown();
+        }
+        
+        function closePerformanceDropdown() {
+            document.getElementById('performance-dropdown-modal').classList.add('hidden');
+            currentDropdownTarget = '';
+        }
+
+        // 계산기 내 저장된 값 선택 함수들
+        function populateCalculatorDropdown() {
+            const dropdown = document.querySelector('#calculator-content select');
+            if (!dropdown) return;
+            
+            // 기존 옵션들 제거 (첫 번째 옵션 제외)
+            while (dropdown.children.length > 1) {
+                dropdown.removeChild(dropdown.lastChild);
+            }
+            
+            // 저장된 모든 수행평가 값들 수집
+            const allSavedValues = [];
+            
+            // 평균 점수 관리에서 저장된 값들 추가
+            ['performance1', 'performance2', 'performance3', 'performance4'].forEach(areaType => {
+                const savedName = savedPerformanceAreaNames[areaType];
+                const savedAvg = savedAverages[areaType];
+                if (savedName && savedAvg) {
+                    allSavedValues.push({
+                        name: savedName,
+                        avg: savedAvg,
+                        source: '평균 점수 관리',
+                        value: `${savedName}|${savedAvg}`
+                    });
+                }
+            });
+            
+            // 모든 과목의 저장된 수행평가 값들 추가
+            Object.entries(savedAverages.performance).forEach(([subject, areas]) => {
+                Object.entries(areas).forEach(([areaName, avg]) => {
+                    allSavedValues.push({
+                        name: areaName,
+                        avg: avg,
+                        source: `${subject} 과목`,
+                        subject: subject,
+                        value: `${areaName}|${avg}`
+                    });
+                });
+            });
+            
+            if (allSavedValues.length === 0) {
+                const option = document.createElement('option');
+                option.value = '';
+                option.textContent = '저장된 값이 없습니다';
+                option.disabled = true;
+                dropdown.appendChild(option);
+            } else {
+                // 과목별로 그룹화
+                const groupedValues = {};
+                allSavedValues.forEach(item => {
+                    const group = item.source;
+                    if (!groupedValues[group]) {
+                        groupedValues[group] = [];
+                    }
+                    groupedValues[group].push(item);
+                });
+                
+                Object.entries(groupedValues).forEach(([source, items]) => {
+                    // 그룹 헤더 (optgroup)
+                    const optgroup = document.createElement('optgroup');
+                    optgroup.label = source;
+                    
+                    // 그룹 내 항목들
+                    items.forEach(item => {
+                        const option = document.createElement('option');
+                        option.value = item.value;
+                        option.textContent = `${item.name} (${item.avg}점)`;
+                        optgroup.appendChild(option);
+                    });
+                    
+                    dropdown.appendChild(optgroup);
+                });
+            }
+        }
+        
+        function addSavedValueToCalculatorFromDropdown(dropdown) {
+            if (!dropdown.value) return;
+            
+            const [areaName, avg] = dropdown.value.split('|');
+            const container = document.getElementById('class-areas-container');
+            
+            // 이미 4개 영역이 있으면 추가하지 않음
+            if (container.children.length >= 4) {
+                alert('최대 4개 영역까지만 추가할 수 있습니다.');
+                dropdown.value = '';
+                return;
+            }
+            
+            // 이미 같은 영역명이 있는지 확인
+            const existingNames = Array.from(container.querySelectorAll('input[type="text"]')).map(input => input.value);
+            if (existingNames.includes(areaName)) {
+                alert('이미 추가된 영역입니다.');
+                dropdown.value = '';
+                return;
+            }
+            
+            // 새 영역 추가
+            const newItem = document.createElement('div');
+            newItem.className = 'class-area-item flex items-center space-x-2 mb-2';
+            newItem.innerHTML = `
+                <input type="text" placeholder="영역명 (예: 말하기)" 
+                       class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm" 
+                       value="${areaName}">
+                <input type="number" step="0.1" placeholder="평균점수" 
+                       class="w-24 px-3 py-2 border border-gray-300 rounded-lg text-sm" 
+                       oninput="updateClassAreas()" 
+                       value="${avg}">
+                <button type="button" onclick="removeClassArea(this)" 
+                        class="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded text-xs">
+                    삭제
+                </button>
+            `;
+            container.appendChild(newItem);
+            
+            // 평균 업데이트
+            updateClassAreas();
+            
+            // 드롭다운 초기화
+            dropdown.value = '';
+        }
+        
+        function addSavedValueToCalculator(areaName, avg) {
+            const container = document.getElementById('class-areas-container');
+            
+            // 이미 4개 영역이 있으면 추가하지 않음
+            if (container.children.length >= 4) {
+                alert('최대 4개 영역까지만 추가할 수 있습니다.');
+                return;
+            }
+            
+            // 이미 같은 영역명이 있는지 확인
+            const existingNames = Array.from(container.querySelectorAll('input[type="text"]')).map(input => input.value);
+            if (existingNames.includes(areaName)) {
+                alert('이미 추가된 영역입니다.');
+                return;
+            }
+            
+            // 새 영역 추가
+            const newItem = document.createElement('div');
+            newItem.className = 'class-area-item flex items-center space-x-2 mb-2';
+            newItem.innerHTML = `
+                <input type="text" placeholder="영역명 (예: 말하기)" 
+                       class="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm" 
+                       value="${areaName}">
+                <input type="number" step="0.1" placeholder="평균점수" 
+                       class="w-24 px-3 py-2 border border-gray-300 rounded-lg text-sm" 
+                       oninput="updateClassAreas()" 
+                       value="${avg}">
+                <button type="button" onclick="removeClassArea(this)" 
+                        class="bg-red-500 hover:bg-red-600 text-white px-2 py-1 rounded text-xs">
+                    삭제
+                </button>
+            `;
+            container.appendChild(newItem);
+            
+            // 평균 업데이트
+            updateClassAreas();
+            
+            // 모달 닫기
+            closeCalculatorSavedValues();
+        }
+        
+        function closeCalculatorSavedValues() {
+            document.getElementById('calculator-saved-values-modal').classList.add('hidden');
         }
 
         // 계산 공식 모달 함수들
@@ -2239,6 +2867,76 @@ function downloadXLSX() {
             updateSavedAveragesDisplay();
             updatePerformanceAreaTitles();
         });
+// ✅ 수행평가 영역명 ↔ 평균 자동 연동
+document.addEventListener("input", (e) => {
+  if (e.target.id === "absent-performance-name") {
+    const name = e.target.value.trim();
+    const avgInput = document.getElementById("absent-performance-avg");
+    
+    // 평균 점수 관리에서 동일 이름 있으면 자동 입력
+    ['performance1','performance2','performance3','performance4'].forEach(key => {
+      if (savedPerformanceAreaNames[key] === name && savedAverages[key]) {
+        avgInput.value = savedAverages[key];
+      }
+    });
+  }
+});
+
+document.addEventListener("input", (e) => {
+  if (e.target.id === "absent-performance-avg") {
+    const avg = parseFloat(e.target.value);
+    const name = document.getElementById("absent-performance-name")?.value;
+    const subject = document.getElementById("student-subject").value;
+    
+    if (avg && name && subject) {
+      savePerformanceAverage(subject, name, avg);
+    }
+  }
+});
+// ✅ Excel 파일 저장 함수
+function downloadExcel() {
+  if (resultsData.length === 0) {
+    alert("저장할 데이터가 없습니다.");
+    return;
+  }
+
+  const grade = document.getElementById("student-grade").value || "학년";
+  const subject = document.getElementById("student-subject").value || "과목";
+
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = today.getMonth() + 1;
+  const day = today.getDate();
+
+  let schoolYear = (month < 3) ? year - 1 : year;
+  let semester = (month >= 3 && month <= 8) ? "1학기" : "2학기";
+
+  const formattedDate =
+    year.toString() +
+    (month < 10 ? "0" + month : month) +
+    (day < 10 ? "0" + day : day);
+
+  const fileName = `${schoolYear}학년도 ${semester} 인정점 계산기(${grade}학년_${subject})_${formattedDate}.xlsx`;
+
+  const worksheetData = [
+    ["번호","학년","반","번호","이름","과목","결시시험","세부명","결시사유","인정비율","산출기준","기준점","인정점","비고"]
+  ];
+
+  resultsData.forEach(data => {
+    worksheetData.push([
+      data.id, data.grade, data.class, data.number, data.name,
+      data.subject, data.examType, data.detailName, data.absenceReason,
+      data.recognitionRate, data.calculationBasis, data.baseScore, data.finalScore,
+      data.remarks
+    ]);
+  });
+
+  const worksheet = XLSX.utils.aoa_to_sheet(worksheetData);
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "결과");
+
+  XLSX.writeFile(workbook, fileName);
+}
     </script>
 </body>
 </html>
