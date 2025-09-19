@@ -706,15 +706,15 @@
                 if (method === 'other-performance') {
                     fields = [
                         { id: 'absent-performance-area', label: '결시한 수행평가 영역명', placeholder: '드롭다운에서 선택', type: 'dropdown' },
-                        { id: 'absent-performance-avg', label: '전체 학생 평균', placeholder: '자동 입력됨', readonly: true },
-                        { id: 'performance-area1', label: '수행평가 1영역', type: 'performance-area', areaNum: 1 },
-                        { id: 'performance-area2', label: '수행평가 2영역 (선택)', type: 'performance-area', areaNum: 2, optional: true },
-                        { id: 'performance-area3', label: '수행평가 3영역 (선택)', type: 'performance-area', areaNum: 3, optional: true }
+                        { id: 'absent-performance-avg', label: '결시한 영역의 전체 학생 평균', placeholder: '자동 입력됨', readonly: true },
+                        { id: 'performance-area1', label: '응시한 수행평가 1영역', type: 'performance-area', areaNum: 1 },
+                        { id: 'performance-area2', label: '응시한 수행평가 2영역 (선택)', type: 'performance-area', areaNum: 2, optional: true },
+                        { id: 'performance-area3', label: '응시한 수행평가 3영역 (선택)', type: 'performance-area', areaNum: 3, optional: true }
                     ];
                 } else if (method === 'written-exam') {
                     fields = [
                         { id: 'absent-performance-area', label: '결시한 수행평가 영역명', placeholder: '드롭다운에서 선택', type: 'dropdown' },
-                        { id: 'absent-performance-avg', label: '전체 학생 평균', placeholder: '자동 입력됨', readonly: true },
+                        { id: 'absent-performance-avg', label: '결시한 영역의 전체 학생 평균', placeholder: '자동 입력됨', readonly: true },
                         { id: 'student-performance-areas', label: '학생이 응시한 수행평가 점수들', type: 'selective-performance', description: '학생이 실제로 응시한 수행평가 영역만 선택하여 점수를 입력하세요' },
                         { id: 'midterm-score', label: '해당 학생의 중간고사 점수', placeholder: '예: 82 (없으면 0)', description: '해당 학생이 중간고사에서 받은 점수 (응시하지 않았으면 0 입력)' },
                         { id: 'midterm-avg', label: '전체 학생의 중간고사 평균', placeholder: '예: 75.5 (없으면 0)', description: '전체 학생들의 중간고사 평균점수 (실시하지 않았으면 0 입력)', autoFill: 'midterm-avg-input' },
@@ -1045,7 +1045,7 @@
                     }
                 }
 
-                result = Math.round(result * 100) / 100;
+                result = Math.round(result * 100000) / 100000;
                 
                 let baseScore, finalScore;
                 
@@ -1154,7 +1154,7 @@
                 absenceReason: reasonText,
                 recognitionRate: recognitionRateText,
                 calculationBasis: calculationBasisText,
-                baseScore: baseScore.toFixed(5),
+                baseScore: Math.round(baseScore * 100000) / 100000,
                 finalScore: Math.round(finalScore * 100) / 100,
                 remarks: remarksText
             };
@@ -1170,8 +1170,8 @@
                               'bg-gray-100 text-gray-800';
             
             const baseScoreDisplay = baseScore > 100 ? 
-                `<span class="text-orange-600 font-bold">${baseScore.toFixed(5)}점</span>` : 
-                `<span class="text-blue-600">${baseScore.toFixed(5)}점</span>`;
+                `<span class="text-orange-600 font-bold">${(Math.round(baseScore * 100000) / 100000).toFixed(5)}점</span>` : 
+                `<span class="text-blue-600">${(Math.round(baseScore * 100000) / 100000).toFixed(5)}점</span>`;
             
             const finalScoreDisplay = baseScore > 100 ? 
                 `<span class="text-green-800 font-bold">100.00점</span>` : 
@@ -1282,7 +1282,7 @@
                     data.absenceReason,
                     data.recognitionRate,
                     data.calculationBasis,
-                    parseFloat(data.baseScore).toFixed(5),
+                    (Math.round(data.baseScore * 100000) / 100000).toFixed(5),
                     typeof data.finalScore === 'number' ? data.finalScore.toFixed(2) : parseFloat(data.finalScore).toFixed(2),
                     data.remarks
                 ]);
@@ -1353,7 +1353,7 @@
                     data.absenceReason,
                     data.recognitionRate,
                     data.calculationBasis,
-                    parseFloat(data.baseScore).toFixed(5),
+                    (Math.round(data.baseScore * 100000) / 100000).toFixed(5),
                     typeof data.finalScore === 'number' ? data.finalScore.toFixed(2) : parseFloat(data.finalScore).toFixed(2),
                     data.remarks
                 ].join('\t');
