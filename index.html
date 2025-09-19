@@ -1045,8 +1045,6 @@
                     }
                 }
 
-                result = Math.round(result * 100000) / 100000;
-                
                 let baseScore, finalScore;
                 
                 if (currentAbsenceReason === 'sick') {
@@ -1056,6 +1054,10 @@
                     baseScore = result;
                     finalScore = result > 100 ? 100 : result;
                 }
+                
+                // 기준점을 소수점 6번째 자리에서 반올림하여 5번째 자리까지 표시
+                baseScore = Math.round(baseScore * 100000) / 100000;
+                finalScore = Math.round(finalScore * 100) / 100;
                 
                 addResultToTable(baseScore, finalScore, reasonText);
                 resetForm();
