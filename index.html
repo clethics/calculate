@@ -705,22 +705,22 @@
             } else if (examType === 'performance') {
                 if (method === 'other-performance') {
                     fields = [
+                        { id: 'absent-performance-area', label: '결시한 수행평가 영역명', placeholder: '드롭다운에서 선택', type: 'dropdown' },
+                        { id: 'absent-performance-avg', label: '전체 학생 평균', placeholder: '자동 입력됨', readonly: true },
                         { id: 'performance-area1', label: '수행평가 1영역', type: 'performance-area', areaNum: 1 },
                         { id: 'performance-area2', label: '수행평가 2영역 (선택)', type: 'performance-area', areaNum: 2, optional: true },
-                        { id: 'performance-area3', label: '수행평가 3영역 (선택)', type: 'performance-area', areaNum: 3, optional: true },
-                        { id: 'absent-performance-area', label: '결시한 수행평가 영역명', placeholder: '드롭다운에서 선택', type: 'dropdown' },
-                        { id: 'absent-performance-avg', label: '전체 학생 평균', placeholder: '자동 입력됨', readonly: true }
+                        { id: 'performance-area3', label: '수행평가 3영역 (선택)', type: 'performance-area', areaNum: 3, optional: true }
                     ];
                 } else if (method === 'written-exam') {
                     fields = [
+                        { id: 'absent-performance-area', label: '결시한 수행평가 영역명', placeholder: '드롭다운에서 선택', type: 'dropdown' },
+                        { id: 'absent-performance-avg', label: '전체 학생 평균', placeholder: '자동 입력됨', readonly: true },
                         { id: 'student-performance-areas', label: '학생이 응시한 수행평가 점수들', type: 'selective-performance', description: '학생이 실제로 응시한 수행평가 영역만 선택하여 점수를 입력하세요' },
                         { id: 'midterm-score', label: '해당 학생의 중간고사 점수', placeholder: '예: 82 (없으면 0)', description: '해당 학생이 중간고사에서 받은 점수 (응시하지 않았으면 0 입력)' },
                         { id: 'midterm-avg', label: '전체 학생의 중간고사 평균', placeholder: '예: 75.5 (없으면 0)', description: '전체 학생들의 중간고사 평균점수 (실시하지 않았으면 0 입력)', autoFill: 'midterm-avg-input' },
                         { id: 'final-score', label: '해당 학생의 기말고사 점수', placeholder: '예: 85 (없으면 0)', description: '해당 학생이 기말고사에서 받은 점수 (응시하지 않았으면 0 입력)' },
                         { id: 'final-avg', label: '전체 학생의 기말고사 평균', placeholder: '예: 78.2 (없으면 0)', description: '전체 학생들의 기말고사 평균점수 (실시하지 않았으면 0 입력)', autoFill: 'final-avg-input' },
-                        { id: 'performance-avg', label: '전체 학생의 수행평가 평균', placeholder: '예: 82.3', autoFill: 'getPerformanceAverage' },
-                        { id: 'absent-performance-area', label: '결시한 수행평가 영역명', placeholder: '드롭다운에서 선택', type: 'dropdown' },
-                        { id: 'absent-performance-avg', label: '전체 학생 평균', placeholder: '자동 입력됨', readonly: true }
+                        { id: 'performance-avg', label: '전체 학생의 수행평가 평균', placeholder: '예: 82.3', autoFill: 'getPerformanceAverage' }
                     ];
                 } else if (method === 'no-score') {
                     fields = [
@@ -1585,6 +1585,7 @@
             }
             
             if (data) {
+                // 수행평가 영역들 추가
                 for (let i = 1; i <= 4; i++) {
                     const name = data[`perf${i}Name`];
                     const avg = data[`perf${i}Avg`];
@@ -1595,6 +1596,14 @@
                         option.textContent = name;
                         dropdown.appendChild(option);
                     }
+                }
+                
+                // 영어 과목인 경우 영어듣기도 추가
+                if (subject === '영어' && data.listeningAvg) {
+                    const option = document.createElement('option');
+                    option.value = `listening|영어듣기|${data.listeningAvg}`;
+                    option.textContent = '영어듣기';
+                    dropdown.appendChild(option);
                 }
             }
         }
@@ -1615,6 +1624,7 @@
             }
             
             if (data) {
+                // 수행평가 영역들 추가
                 for (let i = 1; i <= 4; i++) {
                     const name = data[`perf${i}Name`];
                     const avg = data[`perf${i}Avg`];
@@ -1625,6 +1635,14 @@
                         option.textContent = name;
                         dropdown.appendChild(option);
                     }
+                }
+                
+                // 영어 과목인 경우 영어듣기도 추가
+                if (subject === '영어' && data.listeningAvg) {
+                    const option = document.createElement('option');
+                    option.value = `listening|영어듣기|${data.listeningAvg}`;
+                    option.textContent = '영어듣기';
+                    dropdown.appendChild(option);
                 }
             }
         }
@@ -1909,6 +1927,7 @@
             container.innerHTML = '';
             
             if (data) {
+                // 수행평가 영역들 추가
                 for (let i = 1; i <= 4; i++) {
                     const name = data[`perf${i}Name`];
                     const avg = data[`perf${i}Avg`];
@@ -1931,6 +1950,26 @@
                         `;
                         container.appendChild(fieldDiv);
                     }
+                }
+                
+                // 영어 과목인 경우 영어듣기도 추가
+                if (subject === '영어' && data.listeningAvg) {
+                    const fieldDiv = document.createElement('div');
+                    fieldDiv.className = 'grid grid-cols-4 gap-2 items-center';
+                    fieldDiv.innerHTML = `
+                        <div class="flex items-center">
+                            <input type="checkbox" id="perf-check-listening" onchange="togglePerformanceField('listening')" 
+                                   class="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500 focus:ring-2">
+                            <label for="perf-check-listening" class="ml-2 text-sm font-medium text-gray-700">영어듣기</label>
+                        </div>
+                        <input type="number" step="0.1" id="student-perf-listening" placeholder="학생 점수" 
+                               oninput="calculateSelectivePerformanceAverage()" disabled
+                               class="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200 disabled:bg-gray-100 disabled:cursor-not-allowed">
+                        <input type="number" step="0.1" value="${data.listeningAvg}" readonly 
+                               class="px-3 py-2 text-sm border border-gray-300 rounded-lg bg-gray-50 focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200">
+                        <div class="text-xs text-gray-500">전체평균</div>
+                    `;
+                    container.appendChild(fieldDiv);
                 }
             }
         }
@@ -2011,6 +2050,26 @@
                 if (name && checkbox && checkbox.checked) {
                     const scoreInput = document.getElementById(`student-perf-${i}`);
                     const avg = data[`perf${i}Avg`];
+                    
+                    if (scoreInput && scoreInput.value && avg) {
+                        const score = parseFloat(scoreInput.value);
+                        const classAvg = parseFloat(avg);
+                        
+                        if (!isNaN(score) && !isNaN(classAvg)) {
+                            studentScores.push(score);
+                            studentAreaClassAverages.push(classAvg);
+                        }
+                    }
+                }
+            }
+            
+            // 영어 과목인 경우 영어듣기도 확인
+            if (subject === '영어' && data.listeningAvg) {
+                const checkbox = document.getElementById('perf-check-listening');
+                
+                if (checkbox && checkbox.checked) {
+                    const scoreInput = document.getElementById('student-perf-listening');
+                    const avg = data.listeningAvg;
                     
                     if (scoreInput && scoreInput.value && avg) {
                         const score = parseFloat(scoreInput.value);
