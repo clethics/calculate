@@ -20,7 +20,7 @@
 <body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen p-4">
     <div class="max-w-4xl mx-auto">
         <div class="bg-white rounded-2xl shadow-xl p-8 mb-6">
-            <h1 class="text-3xl font-bold text-gray-800 text-center mb-2">🏫 일광중학교 결시자 인정점 계산기🖩</h1>
+            <h1 class="text-3xl font-bold text-gray-800 text-center mb-2">🏫 일광중학교 결시자 인정점 계산기🏫</h1>
             <p class="text-gray-600 text-center mb-8">😊인정점 계산을 보다 편리하게😊</p>
             
             <!-- 학년/과목 선택 -->
@@ -1961,33 +1961,25 @@
             if (!data) return;
             
             let studentScores = [];
-            let allClassAverages = []; // 모든 영역의 평균 (전체 평균 계산용)
+            let studentAreaClassAverages = []; // 학생이 응시한 영역들의 전체 학생 평균
             
-            // 학생이 응시한 영역의 점수만 수집
+            // 학생이 응시한 영역의 점수와 해당 영역의 전체 평균 수집
             for (let i = 1; i <= 4; i++) {
                 const name = data[`perf${i}Name`];
                 const checkbox = document.getElementById(`perf-check-${i}`);
                 
                 if (name && checkbox && checkbox.checked) {
                     const scoreInput = document.getElementById(`student-perf-${i}`);
-                    if (scoreInput && scoreInput.value) {
+                    const avg = data[`perf${i}Avg`];
+                    
+                    if (scoreInput && scoreInput.value && avg) {
                         const score = parseFloat(scoreInput.value);
-                        if (!isNaN(score)) {
+                        const classAvg = parseFloat(avg);
+                        
+                        if (!isNaN(score) && !isNaN(classAvg)) {
                             studentScores.push(score);
+                            studentAreaClassAverages.push(classAvg);
                         }
-                    }
-                }
-            }
-            
-            // 모든 영역의 전체 평균 수집 (학생 응시 여부와 관계없이)
-            for (let i = 1; i <= 4; i++) {
-                const name = data[`perf${i}Name`];
-                const avg = data[`perf${i}Avg`];
-                
-                if (name && avg) {
-                    const classAvg = parseFloat(avg);
-                    if (!isNaN(classAvg)) {
-                        allClassAverages.push(classAvg);
                     }
                 }
             }
@@ -2000,9 +1992,9 @@
                 const studentAverage = studentScores.reduce((a, b) => a + b, 0) / studentScores.length;
                 avgInput.value = studentAverage.toFixed(2);
                 
-                // 전체 학생 평균: 모든 영역의 평균 (학생 응시 여부와 관계없이)
-                if (classAvgInput && allClassAverages.length > 0) {
-                    const totalClassAverage = allClassAverages.reduce((a, b) => a + b, 0) / allClassAverages.length;
+                // 전체 학생 평균: 학생이 응시한 영역들의 전체 학생 평균
+                if (classAvgInput && studentAreaClassAverages.length > 0) {
+                    const totalClassAverage = studentAreaClassAverages.reduce((a, b) => a + b, 0) / studentAreaClassAverages.length;
                     classAvgInput.value = totalClassAverage.toFixed(2);
                 }
             } else if (avgInput) {
