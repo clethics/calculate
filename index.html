@@ -20,7 +20,7 @@
 <body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-screen p-4">
     <div class="max-w-4xl mx-auto">
         <div class="bg-white rounded-2xl shadow-xl p-8 mb-6">
-            <h1 class="text-3xl font-bold text-gray-800 text-center mb-2">🏫 일광중학교 결시자 인정점 계산기🏫</h1>
+            <h1 class="text-3xl font-bold text-gray-800 text-center mb-2">🏫 일광중학교 결시자 인정점 계산기 🏫</h1>
             <p class="text-gray-600 text-center mb-8">😊인정점 계산을 보다 편리하게😊</p>
             
             <!-- 학년/과목 선택 -->
@@ -863,13 +863,24 @@
                         }
                     }
                     
-                    if (isNaN(minScore) || minScore <= 0) {
+                    if (isNaN(minScore) || minScore < 0) {
                         alert('최하점을 올바르게 입력해주세요.');
                         return;
                     }
                     
-                    const baseScore = minScore;
-                    const finalScore = minScore - 1;
+                    let baseScore, finalScore;
+                    
+                    // 성적이 없는 경우 모든 결시 사유에 대해 최하점의 차하점 적용
+                    if (minScore === 0) {
+                        // 최하점이 0점인 경우: 기준점 0점, 인정점 0점 (0점 하한 적용)
+                        baseScore = 0;
+                        finalScore = 0;
+                    } else {
+                        // 최하점이 0점이 아닌 경우: 기준점 최하점, 인정점 최하점-1점
+                        baseScore = minScore;
+                        finalScore = minScore - 1;
+                    }
+                    
                     addResultToTable(baseScore, finalScore, reasonText);
                     resetForm();
                     return;
