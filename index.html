@@ -649,8 +649,10 @@
             if (examType === 'english-listening') {
                 if (method === 'written-exam') {
                     fields = [
-                        { id: 'student-written-score', label: '해당 학생의 영어 지필평가 점수', placeholder: '예: 85' },
-                        { id: 'written-avg', label: '전체 학생의 영어 지필평가 평균', placeholder: '예: 78.2', autoFill: 'getWrittenAverage' },
+                        { id: 'student-midterm-score', label: '해당 학생의 중간고사 점수', placeholder: '예: 82 (없으면 0)', description: '해당 학생이 중간고사에서 받은 점수 (응시하지 않았으면 0 입력)' },
+                        { id: 'student-final-score', label: '해당 학생의 기말고사 점수', placeholder: '예: 88 (없으면 0)', description: '해당 학생이 기말고사에서 받은 점수 (응시하지 않았으면 0 입력)' },
+                        { id: 'midterm-avg', label: '전체 학생의 중간고사 평균', placeholder: '예: 75.5 (없으면 0)', description: '전체 학생들의 중간고사 평균점수 (실시하지 않았으면 0 입력)', autoFill: 'midterm-avg-input' },
+                        { id: 'final-avg', label: '전체 학생의 기말고사 평균', placeholder: '예: 78.2 (없으면 0)', description: '전체 학생들의 기말고사 평균점수 (실시하지 않았으면 0 입력)', autoFill: 'final-avg-input' },
                         { id: 'listening-avg', label: '전체 학생의 영어듣기평가 평균 점수', placeholder: '예: 82.5', autoFill: 'listening-avg-input' }
                     ];
                 } else if (method === 'performance-only') {
@@ -888,11 +890,38 @@
                     // 일반적인 계산
                     if (currentExamType === 'english-listening') {
                         if (currentMethod === 'written-exam') {
-                            const studentWrittenScore = parseFloat(document.getElementById('student-written-score').value);
-                            const writtenAvg = parseFloat(document.getElementById('written-avg').value);
+                            const studentMidtermScore = parseFloat(document.getElementById('student-midterm-score').value) || 0;
+                            const studentFinalScore = parseFloat(document.getElementById('student-final-score').value) || 0;
+                            const midtermAvg = parseFloat(document.getElementById('midterm-avg').value) || 0;
+                            const finalAvg = parseFloat(document.getElementById('final-avg').value) || 0;
                             const listeningAvg = parseFloat(document.getElementById('listening-avg').value);
                             
-                            const calculatedScore = (studentWrittenScore / writtenAvg) * listeningAvg;
+                            // 학생의 지필고사 평균 계산
+                            let studentWrittenAvg = 0;
+                            let classWrittenAvg = 0;
+                            
+                            if (studentMidtermScore > 0 && studentFinalScore > 0) {
+                                studentWrittenAvg = (studentMidtermScore + studentFinalScore) / 2;
+                            } else if (studentMidtermScore > 0) {
+                                studentWrittenAvg = studentMidtermScore;
+                            } else if (studentFinalScore > 0) {
+                                studentWrittenAvg = studentFinalScore;
+                            }
+                            
+                            if (midtermAvg > 0 && finalAvg > 0) {
+                                classWrittenAvg = (midtermAvg + finalAvg) / 2;
+                            } else if (midtermAvg > 0) {
+                                classWrittenAvg = midtermAvg;
+                            } else if (finalAvg > 0) {
+                                classWrittenAvg = finalAvg;
+                            }
+                            
+                            if (studentWrittenAvg === 0 || classWrittenAvg === 0) {
+                                alert('학생의 지필고사 점수와 전체 평균을 올바르게 입력해주세요.');
+                                return;
+                            }
+                            
+                            const calculatedScore = (studentWrittenAvg / classWrittenAvg) * listeningAvg;
                             result = calculatedScore * recognitionRate;
                         } else if (currentMethod === 'performance-only') {
                             const studentPerfScore = parseFloat(document.getElementById('student-perf-score').value);
@@ -1125,8 +1154,8 @@
                 absenceReason: reasonText,
                 recognitionRate: recognitionRateText,
                 calculationBasis: calculationBasisText,
-                baseScore: baseScore.toFixed(2),
-                finalScore: finalScore.toFixed(2),
+                baseScore: baseScore.toFixed(5),
+                finalScore: Math.round(finalScore * 100) / 100,
                 remarks: remarksText
             };
             resultsData.push(resultData);
@@ -1141,12 +1170,12 @@
                               'bg-gray-100 text-gray-800';
             
             const baseScoreDisplay = baseScore > 100 ? 
-                `<span class="text-orange-600 font-bold">${baseScore.toFixed(2)}점</span>` : 
-                `<span class="text-blue-600">${baseScore.toFixed(2)}점</span>`;
+                `<span class="text-orange-600 font-bold">${baseScore.toFixed(5)}점</span>` : 
+                `<span class="text-blue-600">${baseScore.toFixed(5)}점</span>`;
             
             const finalScoreDisplay = baseScore > 100 ? 
                 `<span class="text-green-800 font-bold">100.00점</span>` : 
-                `<span class="text-green-800 font-bold">${finalScore.toFixed(2)}점</span>`;
+                `<span class="text-green-800 font-bold">${(Math.round(finalScore * 100) / 100).toFixed(2)}점</span>`;
             
             const rateClass = currentAbsenceReason === 'sick' ? 'text-orange-600' :
                              currentAbsenceReason === 'approved' ? 'text-blue-600' :
@@ -1253,8 +1282,8 @@
                     data.absenceReason,
                     data.recognitionRate,
                     data.calculationBasis,
-                    parseFloat(data.baseScore),
-                    parseFloat(data.finalScore),
+                    parseFloat(data.baseScore).toFixed(5),
+                    typeof data.finalScore === 'number' ? data.finalScore.toFixed(2) : parseFloat(data.finalScore).toFixed(2),
                     data.remarks
                 ]);
             });
@@ -1324,8 +1353,8 @@
                     data.absenceReason,
                     data.recognitionRate,
                     data.calculationBasis,
-                    data.baseScore,
-                    data.finalScore,
+                    parseFloat(data.baseScore).toFixed(5),
+                    typeof data.finalScore === 'number' ? data.finalScore.toFixed(2) : parseFloat(data.finalScore).toFixed(2),
                     data.remarks
                 ].join('\t');
                 textContent += row + '\n';
