@@ -724,7 +724,8 @@
                     ];
                 } else if (method === 'no-score') {
                     fields = [
-                        { id: 'performance-min', label: '수행평가 최하점', placeholder: '예: 40' }
+                        { id: 'absent-performance-area', label: '결시한 수행평가 영역명', placeholder: '드롭다운에서 선택', type: 'dropdown' },
+                        { id: 'performance-min', label: '수행평가 최하점', placeholder: '자동 입력됨', readonly: true }
                     ];
                 }
             }
@@ -790,8 +791,11 @@
                         </div>
                     `;
                 } else if (field.readonly) {
-                    // 읽기 전용 필드는 이미 위에서 처리됨
-                    return;
+                    // 읽기 전용 필드
+                    inputHtml = `
+                        <input type="number" step="0.1" id="${field.id}" placeholder="${field.placeholder}" 
+                               readonly class="w-full px-4 py-3 border border-gray-300 rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200">
+                    `;
                 } else {
                     // 일반 입력 필드
                     let inputType = field.id.includes('score') || field.id.includes('avg') || field.id.includes('min') ? 'number' : 'text';
@@ -859,7 +863,13 @@
                         } else if (currentExamType === 'final') {
                             minScore = parseFloat(document.getElementById('final-min').value);
                         } else if (currentExamType === 'performance') {
-                            minScore = parseFloat(document.getElementById('performance-min').value);
+                            const dropdown = document.getElementById('absent-performance-area');
+                            if (dropdown && dropdown.value) {
+                                minScore = parseFloat(document.getElementById('performance-min').value);
+                            } else {
+                                alert('결시한 수행평가 영역을 선택해주세요.');
+                                return;
+                            }
                         } else if (currentExamType === 'english-listening') {
                             minScore = parseFloat(document.getElementById('listening-min').value);
                         }
@@ -1086,7 +1096,13 @@
             } else if (currentExamType === 'english-listening') {
                 detailName = '영어듣기';
             } else if (currentExamType === 'performance') {
-                detailName = '수행평가';
+                const dropdown = document.getElementById('absent-performance-area');
+                if (dropdown && dropdown.value) {
+                    const [index, name] = dropdown.value.split('|');
+                    detailName = name;
+                } else {
+                    detailName = '수행평가';
+                }
             }
             
             resultCounter++;
@@ -1664,12 +1680,41 @@
         function updatePerformanceAverage() {
             const dropdown = document.getElementById('absent-performance-area');
             const avgInput = document.getElementById('absent-performance-avg');
+            const minInput = document.getElementById('performance-min');
             
             if (dropdown.value) {
                 const [index, name, avg] = dropdown.value.split('|');
-                avgInput.value = avg;
+                if (avgInput) {
+                    avgInput.value = avg;
+                }
+                
+                // 최하점도 자동으로 설정
+                if (minInput) {
+                    const grade = document.getElementById('student-grade').value;
+                    const subject = document.getElementById('student-subject').value;
+                    
+                    if (grade && subject) {
+                        const key = `${grade}-${subject}`;
+                        const data = savedAverages[key];
+                        
+                        if (data) {
+                            let minScore = '';
+                            if (index === 'listening') {
+                                minScore = data.listeningMin || '';
+                            } else {
+                                minScore = data[`perf${index}Min`] || '';
+                            }
+                            minInput.value = minScore;
+                        }
+                    }
+                }
             } else {
-                avgInput.value = '';
+                if (avgInput) {
+                    avgInput.value = '';
+                }
+                if (minInput) {
+                    minInput.value = '';
+                }
             }
         }
 
@@ -1762,7 +1807,11 @@
                 const dropdown = document.getElementById('absent-performance-area');
                 if (dropdown && dropdown.value) {
                     const [index] = dropdown.value.split('|');
-                    return data[`perf${index}Min`] ? parseFloat(data[`perf${index}Min`]) : null;
+                    if (index === 'listening') {
+                        return data.listeningMin ? parseFloat(data.listeningMin) : null;
+                    } else {
+                        return data[`perf${index}Min`] ? parseFloat(data[`perf${index}Min`]) : null;
+                    }
                 }
             } else if (examType === 'english-listening') {
                 return data.listeningMin ? parseFloat(data.listeningMin) : null;
