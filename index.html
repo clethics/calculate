@@ -1882,11 +1882,11 @@
             
             // 동적 헤더 생성
             const baseHeaders = [
-                '번호', '학년', '반', '학번', '이름', '과목', '결시시험', '결시사유', '인정비율', '계산 기준'
+                '번호', '학년', '반', '학번', '이름', '과목', '결시시험', '결시사유', '인정비율', '결시영역명', '결시영역평균', '계산 기준'
             ];
             
-            // 결시 영역 헤더
-            const absentHeaders = ['결시영역명', '결시영역평균'];
+            // 결시 영역 헤더는 baseHeaders에 포함됨
+            const absentHeaders = [];
             
             // 응시 영역 헤더 (동적 생성)
             const attendedHeaders = [];
@@ -1902,6 +1902,14 @@
             const reviewWorksheetData = [reviewHeaders];
             
             resultsData.forEach(data => {
+                // 결시 영역 정보
+                let absentAreaName = data.detailName || '';
+                let absentAreaAvg = '';
+                
+                if (data.calculationData && data.calculationData.absentAverage) {
+                    absentAreaAvg = data.calculationData.absentAverage;
+                }
+                
                 const row = [
                     data.id,
                     data.grade,
@@ -1912,18 +1920,10 @@
                     data.examType,
                     data.absenceReason,
                     data.recognitionRate,
+                    absentAreaName,
+                    absentAreaAvg,
                     data.calculationBasis
                 ];
-                
-                // 결시 영역 정보
-                let absentAreaName = data.detailName || '';
-                let absentAreaAvg = '';
-                
-                if (data.calculationData && data.calculationData.absentAverage) {
-                    absentAreaAvg = data.calculationData.absentAverage;
-                }
-                
-                row.push(absentAreaName, absentAreaAvg);
                 
                 // 응시 영역 정보 (동적으로 채우기)
                 const calcData = data.calculationData;
@@ -1982,9 +1982,9 @@
                 { wch: 10 },  // 결시시험
                 { wch: 10 },  // 결시사유
                 { wch: 10 },  // 인정비율
-                { wch: 15 },  // 성적 유무
                 { wch: 12 },  // 결시영역명
-                { wch: 10 }   // 결시영역평균
+                { wch: 10 },  // 결시영역평균
+                { wch: 15 }   // 계산 기준
             ];
             
             // 응시 영역 컬럼 너비 추가
