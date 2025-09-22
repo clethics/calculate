@@ -1470,6 +1470,20 @@
                 }
             }
             
+            // 최하점 정보 수집
+            let minScoreValue = '';
+            if (currentMethod === 'no-score') {
+                if (currentExamType === 'midterm') {
+                    minScoreValue = parseFloat(document.getElementById('midterm-min').value) || getMinScore('midterm');
+                } else if (currentExamType === 'final') {
+                    minScoreValue = parseFloat(document.getElementById('final-min').value) || getMinScore('final');
+                } else if (currentExamType === 'performance') {
+                    minScoreValue = parseFloat(document.getElementById('performance-min').value);
+                } else if (currentExamType === 'english-listening') {
+                    minScoreValue = parseFloat(document.getElementById('listening-min').value) || getMinScore('english-listening');
+                }
+            }
+            
             let remarksText = '';
             if (baseScore > 100) {
                 remarksText = '100점 상한 적용';
@@ -1635,7 +1649,7 @@
                 absenceReason: reasonText,
                 recognitionRate: recognitionRateText,
                 scoreAvailability: scoreAvailability,
-                calculationBasis: calculationBasis,
+                minScore: minScoreValue,
                 baseScore: Math.round(baseScore * 100000) / 100000,
                 finalScore: Math.round(finalScore * 100) / 100,
                 remarks: remarksText,
@@ -1766,7 +1780,9 @@
             
             resultsData.forEach(data => {
                 let minScore = '';
-                if (data.calculationData && data.calculationData.minScore) {
+                if (data.minScore) {
+                    minScore = data.minScore;
+                } else if (data.calculationData && data.calculationData.minScore) {
                     minScore = data.calculationData.minScore;
                 }
                 
@@ -1931,10 +1947,10 @@
                 // 나머지 정보
                 let minScore = '';
                 
-                if (calcData) {
-                    if (calcData.minScore) {
-                        minScore = calcData.minScore;
-                    }
+                if (data.minScore) {
+                    minScore = data.minScore;
+                } else if (calcData && calcData.minScore) {
+                    minScore = calcData.minScore;
                 }
                 
                 row.push(
@@ -2028,7 +2044,9 @@
             
             resultsData.forEach(data => {
                 let minScore = '';
-                if (data.calculationData && data.calculationData.minScore) {
+                if (data.minScore) {
+                    minScore = data.minScore;
+                } else if (data.calculationData && data.calculationData.minScore) {
                     minScore = data.calculationData.minScore;
                 }
                 
