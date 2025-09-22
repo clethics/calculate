@@ -296,9 +296,13 @@
                     <div class="flex justify-between items-center mb-4">
                         <h3 class="text-xl font-semibold text-green-800">📊 계산 결과</h3>
                         <div class="space-x-2">
-                            <button type="button" onclick="exportToExcel()" 
+                            <button type="button" onclick="exportToExcelApproval()" 
                                     class="bg-green-500 hover:bg-green-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200">
-                                📊 엑셀 저장
+                                📊 결재용 엑셀 저장
+                            </button>
+                            <button type="button" onclick="exportToExcelReview()" 
+                                    class="bg-blue-500 hover:bg-blue-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200">
+                                📋 평가계 검토용 엑셀 저장
                             </button>
                             <button type="button" onclick="copyResults()" 
                                     class="bg-purple-500 hover:bg-purple-600 text-white px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200">
@@ -658,9 +662,9 @@
                     ];
                 } else if (method === 'performance-only') {
                     fields = [
-                        { id: 'student-perf-score', label: '해당 학생의 영어 수행평가 평균점수', placeholder: '예: 88' },
+                        { id: 'student-performance-areas-listening', label: '학생이 응시한 영어 수행평가 점수들', type: 'dropdown-performance-listening', description: '학생이 실제로 응시한 영어 수행평가 영역을 선택하여 점수를 입력하세요 (영어듣기 제외)' },
                         { id: 'listening-avg', label: '전체 학생의 영어듣기평가 평균 점수', placeholder: '예: 82.5', autoFill: 'listening-avg-input' },
-                        { id: 'perf-excluding-listening-avg', label: '영어듣기 제외한 수행평가 영역의 평균점수', placeholder: '예: 85.3', autoFill: 'getPerformanceExcludingListening' }
+                        { id: 'perf-excluding-listening-avg', label: '영어듣기 제외한 수행평가 영역의 평균점수', placeholder: '자동 계산됨', readonly: true }
                     ];
                 } else if (method === 'no-score') {
                     fields = [
@@ -780,6 +784,24 @@
                                    class="w-full mt-2 px-3 py-2 text-sm border border-gray-300 rounded-lg bg-gray-50 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200">
                         </div>
                     `;
+                } else if (field.type === 'dropdown-performance-listening') {
+                    // 영어듣기용 드롭다운 선택형 수행평가 점수 입력 필드
+                    inputHtml = `
+                        <div id="dropdown-performance-listening-container" class="space-y-3">
+                            <!-- 동적으로 생성됩니다 -->
+                        </div>
+                        <div class="mt-3 flex gap-2">
+                            <button type="button" onclick="addDropdownPerformanceListeningField()" 
+                                    class="px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white rounded-lg text-sm font-medium transition-all duration-200">
+                                + 영역 추가
+                            </button>
+                        </div>
+                        <div class="mt-3 p-3 bg-orange-50 rounded-lg">
+                            <div class="text-sm text-orange-800 font-medium">계산된 학생 영어 수행평가 평균 (영어듣기 제외)</div>
+                            <input type="number" step="0.1" id="calculated-student-listening-performance-avg" readonly 
+                                   class="w-full mt-2 px-3 py-2 text-sm border border-gray-300 rounded-lg bg-gray-50 focus:ring-2 focus:ring-orange-500 focus:border-transparent transition-all duration-200">
+                        </div>
+                    `;
                 } else if (field.readonly) {
                     // 읽기 전용 필드
                     inputHtml = `
@@ -812,6 +834,8 @@
                     populateAreaDropdown(field.areaNum);
                 } else if (field.type === 'dropdown-performance') {
                     populateDropdownPerformanceFields();
+                } else if (field.type === 'dropdown-performance-listening') {
+                    populateDropdownPerformanceListeningFields();
                 }
                 
                 // 자동 채우기 실행
@@ -820,11 +844,19 @@
                         autoFillField(field.id, field.autoFill);
                     }, 100);
                 }
+                
+                // 영어듣기 제외 수행평가 평균 자동 계산
+                if (field.id === 'perf-excluding-listening-avg') {
+                    setTimeout(() => {
+                        updatePerformanceExcludingListeningInForm();
+                    }, 200);
+                }
             });
         }
 
         // 드롭다운 수행평가 필드 관련 변수
         let dropdownPerformanceCounter = 0;
+        let dropdownPerformanceListeningCounter = 0;
 
         function populateDropdownPerformanceFields() {
             const container = document.getElementById('dropdown-performance-container');
@@ -833,6 +865,16 @@
             // 첫 번째 필드 자동 추가
             if (dropdownPerformanceCounter === 0) {
                 addDropdownPerformanceField();
+            }
+        }
+
+        function populateDropdownPerformanceListeningFields() {
+            const container = document.getElementById('dropdown-performance-listening-container');
+            if (!container) return;
+            
+            // 첫 번째 필드 자동 추가
+            if (dropdownPerformanceListeningCounter === 0) {
+                addDropdownPerformanceListeningField();
             }
         }
 
@@ -941,6 +983,125 @@
             }
             
             calculateDropdownPerformanceAverage();
+        }
+
+        function addDropdownPerformanceListeningField() {
+            dropdownPerformanceListeningCounter++;
+            const container = document.getElementById('dropdown-performance-listening-container');
+            
+            const fieldDiv = document.createElement('div');
+            fieldDiv.className = 'grid grid-cols-4 gap-2 items-center';
+            fieldDiv.id = `dropdown-listening-perf-field-${dropdownPerformanceListeningCounter}`;
+            
+            fieldDiv.innerHTML = `
+                <select id="dropdown-listening-perf-select-${dropdownPerformanceListeningCounter}" onchange="updateDropdownListeningPerformanceAverage(${dropdownPerformanceListeningCounter})" 
+                        class="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500">
+                    <option value="">영역 선택</option>
+                </select>
+                <input type="number" step="0.1" id="dropdown-listening-perf-student-${dropdownPerformanceListeningCounter}" placeholder="학생 점수" 
+                       oninput="calculateDropdownListeningPerformanceAverage()" 
+                       class="px-3 py-2 text-sm border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500">
+                <input type="number" step="0.1" id="dropdown-listening-perf-class-${dropdownPerformanceListeningCounter}" placeholder="전체 평균" 
+                       readonly class="px-3 py-2 text-sm border border-gray-300 rounded-lg bg-gray-50">
+                <button type="button" onclick="removeDropdownListeningPerformanceField(${dropdownPerformanceListeningCounter})" 
+                        class="px-3 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg text-sm transition-all duration-200">
+                    삭제
+                </button>
+            `;
+            
+            container.appendChild(fieldDiv);
+            populateDropdownListeningOptions(dropdownPerformanceListeningCounter);
+        }
+
+        function removeDropdownListeningPerformanceField(fieldNum) {
+            const field = document.getElementById(`dropdown-listening-perf-field-${fieldNum}`);
+            if (field) {
+                field.remove();
+                calculateDropdownListeningPerformanceAverage();
+            }
+        }
+
+        function populateDropdownListeningOptions(fieldNum) {
+            const grade = document.getElementById('student-grade').value;
+            const subject = document.getElementById('student-subject').value;
+            
+            if (!grade || !subject) return;
+            
+            const dropdown = document.getElementById(`dropdown-listening-perf-select-${fieldNum}`);
+            
+            if (!dropdown) return;
+            
+            // 기존 옵션 제거 (첫 번째 옵션 제외)
+            while (dropdown.children.length > 1) {
+                dropdown.removeChild(dropdown.lastChild);
+            }
+            
+            // 평균 점수 관리에서 입력된 데이터 직접 가져오기 (영어듣기 제외)
+            const performanceAreas = [];
+            
+            for (let i = 1; i <= 4; i++) {
+                const nameInput = document.getElementById(`perf${i}-name-input`);
+                const avgInput = document.getElementById(`perf${i}-avg-input`);
+                
+                if (nameInput && avgInput && nameInput.value && avgInput.value) {
+                    performanceAreas.push({
+                        index: i,
+                        name: nameInput.value,
+                        avg: avgInput.value
+                    });
+                }
+            }
+            
+            // 드롭다운에 옵션 추가 (영어듣기는 제외)
+            performanceAreas.forEach(area => {
+                const option = document.createElement('option');
+                option.value = `${area.index}|${area.name}|${area.avg}`;
+                option.textContent = area.name;
+                dropdown.appendChild(option);
+            });
+        }
+
+        function updateDropdownListeningPerformanceAverage(fieldNum) {
+            const dropdown = document.getElementById(`dropdown-listening-perf-select-${fieldNum}`);
+            const avgInput = document.getElementById(`dropdown-listening-perf-class-${fieldNum}`);
+            
+            if (dropdown && dropdown.value) {
+                const [index, name, avg] = dropdown.value.split('|');
+                if (avgInput) {
+                    avgInput.value = avg;
+                }
+            } else {
+                if (avgInput) {
+                    avgInput.value = '';
+                }
+            }
+            
+            calculateDropdownListeningPerformanceAverage();
+        }
+
+        function calculateDropdownListeningPerformanceAverage() {
+            let totalScore = 0;
+            let count = 0;
+            
+            for (let i = 1; i <= dropdownPerformanceListeningCounter; i++) {
+                const studentInput = document.getElementById(`dropdown-listening-perf-student-${i}`);
+                if (studentInput && studentInput.value) {
+                    const score = parseFloat(studentInput.value);
+                    if (!isNaN(score)) {
+                        totalScore += score;
+                        count++;
+                    }
+                }
+            }
+            
+            const avgInput = document.getElementById('calculated-student-listening-performance-avg');
+            if (avgInput) {
+                if (count > 0) {
+                    avgInput.value = (totalScore / count).toFixed(2);
+                } else {
+                    avgInput.value = '';
+                }
+            }
         }
 
         function calculateDropdownPerformanceAverage() {
@@ -1067,9 +1228,14 @@
                             const calculatedScore = (studentWrittenAvg / classWrittenAvg) * listeningAvg;
                             result = calculatedScore * recognitionRate;
                         } else if (currentMethod === 'performance-only') {
-                            const studentPerfScore = parseFloat(document.getElementById('student-perf-score').value);
+                            const studentPerfScore = parseFloat(document.getElementById('calculated-student-listening-performance-avg').value);
                             const listeningAvg = parseFloat(document.getElementById('listening-avg').value);
                             const perfExcludingListeningAvg = parseFloat(document.getElementById('perf-excluding-listening-avg').value);
+                            
+                            if (isNaN(studentPerfScore) || studentPerfScore === 0) {
+                                alert('학생의 영어 수행평가 점수를 입력해주세요.');
+                                return;
+                            }
                             
                             const calculatedScore = studentPerfScore * (listeningAvg / perfExcludingListeningAvg);
                             result = calculatedScore * recognitionRate;
@@ -1315,6 +1481,154 @@
                 remarksText = '100점 상한 적용';
             }
             
+            // 계산에 사용된 상세 데이터 수집
+            let calculationData = {
+                attendedExams: [],
+                attendedScores: [],
+                attendedAverages: [],
+                absentAverage: '',
+                minScore: '',
+                calculationFormula: ''
+            };
+            
+            // 계산 방식별로 상세 데이터 수집
+            if (currentMethod !== 'no-score') {
+                if (currentExamType === 'english-listening') {
+                    if (currentMethod === 'written-exam') {
+                        const studentMidtermScore = parseFloat(document.getElementById('student-midterm-score').value) || 0;
+                        const studentFinalScore = parseFloat(document.getElementById('student-final-score').value) || 0;
+                        const midtermAvg = parseFloat(document.getElementById('midterm-avg').value) || 0;
+                        const finalAvg = parseFloat(document.getElementById('final-avg').value) || 0;
+                        const listeningAvg = parseFloat(document.getElementById('listening-avg').value);
+                        
+                        if (studentMidtermScore > 0) {
+                            calculationData.attendedExams.push('중간고사');
+                            calculationData.attendedScores.push(studentMidtermScore);
+                            calculationData.attendedAverages.push(midtermAvg);
+                        }
+                        if (studentFinalScore > 0) {
+                            calculationData.attendedExams.push('기말고사');
+                            calculationData.attendedScores.push(studentFinalScore);
+                            calculationData.attendedAverages.push(finalAvg);
+                        }
+                        calculationData.absentAverage = listeningAvg;
+                        calculationData.calculationFormula = '(학생 지필평균 ÷ 전체 지필평균) × 영어듣기평균 × 인정비율';
+                    } else if (currentMethod === 'performance-only') {
+                        // 영어듣기용 수행평가 데이터 수집
+                        for (let i = 1; i <= dropdownPerformanceListeningCounter; i++) {
+                            const dropdown = document.getElementById(`dropdown-listening-perf-select-${i}`);
+                            const studentScore = document.getElementById(`dropdown-listening-perf-student-${i}`);
+                            const classAvg = document.getElementById(`dropdown-listening-perf-class-${i}`);
+                            
+                            if (dropdown && dropdown.value && studentScore && studentScore.value) {
+                                const [index, name] = dropdown.value.split('|');
+                                calculationData.attendedExams.push(name);
+                                calculationData.attendedScores.push(parseFloat(studentScore.value));
+                                calculationData.attendedAverages.push(parseFloat(classAvg.value));
+                            }
+                        }
+                        calculationData.absentAverage = parseFloat(document.getElementById('listening-avg').value);
+                        calculationData.calculationFormula = '학생 수행평가평균 × (영어듣기평균 ÷ 영어듣기제외 수행평균) × 인정비율';
+                    }
+                } else if (currentExamType === 'midterm') {
+                    if (currentMethod === 'final-score') {
+                        calculationData.attendedExams.push('기말고사');
+                        calculationData.attendedScores.push(parseFloat(document.getElementById('final-score').value));
+                        calculationData.attendedAverages.push(parseFloat(document.getElementById('final-avg').value));
+                        calculationData.absentAverage = parseFloat(document.getElementById('midterm-avg').value);
+                        calculationData.calculationFormula = '(기말점수 ÷ 기말평균) × 중간평균 × 인정비율';
+                    } else if (currentMethod === 'performance-only') {
+                        // 드롭다운 수행평가 데이터 수집
+                        for (let i = 1; i <= dropdownPerformanceCounter; i++) {
+                            const dropdown = document.getElementById(`dropdown-perf-select-${i}`);
+                            const studentScore = document.getElementById(`dropdown-perf-student-${i}`);
+                            const classAvg = document.getElementById(`dropdown-perf-class-${i}`);
+                            
+                            if (dropdown && dropdown.value && studentScore && studentScore.value) {
+                                const [index, name] = dropdown.value.split('|');
+                                calculationData.attendedExams.push(name);
+                                calculationData.attendedScores.push(parseFloat(studentScore.value));
+                                calculationData.attendedAverages.push(parseFloat(classAvg.value));
+                            }
+                        }
+                        calculationData.absentAverage = parseFloat(document.getElementById('midterm-avg').value);
+                        calculationData.calculationFormula = '(수행점수 ÷ 수행평균) × 중간평균 × 인정비율';
+                    }
+                } else if (currentExamType === 'final') {
+                    if (currentMethod === 'midterm-score') {
+                        calculationData.attendedExams.push('중간고사');
+                        calculationData.attendedScores.push(parseFloat(document.getElementById('midterm-score').value));
+                        calculationData.attendedAverages.push(parseFloat(document.getElementById('midterm-avg').value));
+                        calculationData.absentAverage = parseFloat(document.getElementById('final-avg').value);
+                        calculationData.calculationFormula = '(중간점수 ÷ 중간평균) × 기말평균 × 인정비율';
+                    } else if (currentMethod === 'performance-only') {
+                        // 드롭다운 수행평가 데이터 수집
+                        for (let i = 1; i <= dropdownPerformanceCounter; i++) {
+                            const dropdown = document.getElementById(`dropdown-perf-select-${i}`);
+                            const studentScore = document.getElementById(`dropdown-perf-student-${i}`);
+                            const classAvg = document.getElementById(`dropdown-perf-class-${i}`);
+                            
+                            if (dropdown && dropdown.value && studentScore && studentScore.value) {
+                                const [index, name] = dropdown.value.split('|');
+                                calculationData.attendedExams.push(name);
+                                calculationData.attendedScores.push(parseFloat(studentScore.value));
+                                calculationData.attendedAverages.push(parseFloat(classAvg.value));
+                            }
+                        }
+                        calculationData.absentAverage = parseFloat(document.getElementById('final-avg').value);
+                        calculationData.calculationFormula = '(수행점수 ÷ 수행평균) × 기말평균 × 인정비율';
+                    }
+                } else if (currentExamType === 'performance') {
+                    if (currentMethod === 'other-performance') {
+                        // 수행평가 영역별 데이터 수집
+                        for (let i = 1; i <= 3; i++) {
+                            const dropdown = document.getElementById(`area-select-${i}`);
+                            const studentScore = document.getElementById(`student-performance-area${i}`);
+                            const classAvg = document.getElementById(`class-performance-area${i}`);
+                            
+                            if (dropdown && dropdown.value && studentScore && studentScore.value) {
+                                const [index, name] = dropdown.value.split('|');
+                                calculationData.attendedExams.push(name);
+                                calculationData.attendedScores.push(parseFloat(studentScore.value));
+                                calculationData.attendedAverages.push(parseFloat(classAvg.value));
+                            }
+                        }
+                        calculationData.absentAverage = parseFloat(document.getElementById('absent-performance-avg').value);
+                        calculationData.calculationFormula = '학생 다른영역평균 × (결시영역평균 ÷ 다른영역전체평균) × 인정비율';
+                    } else if (currentMethod === 'written-exam') {
+                        const midtermScore = parseFloat(document.getElementById('midterm-score').value) || 0;
+                        const finalScore = parseFloat(document.getElementById('final-score').value) || 0;
+                        const midtermAvg = parseFloat(document.getElementById('midterm-avg').value) || 0;
+                        const finalAvg = parseFloat(document.getElementById('final-avg').value) || 0;
+                        
+                        if (midtermScore > 0) {
+                            calculationData.attendedExams.push('중간고사');
+                            calculationData.attendedScores.push(midtermScore);
+                            calculationData.attendedAverages.push(midtermAvg);
+                        }
+                        if (finalScore > 0) {
+                            calculationData.attendedExams.push('기말고사');
+                            calculationData.attendedScores.push(finalScore);
+                            calculationData.attendedAverages.push(finalAvg);
+                        }
+                        calculationData.absentAverage = parseFloat(document.getElementById('absent-performance-avg').value);
+                        calculationData.calculationFormula = '(학생 지필평균 ÷ 전체 지필평균) × 결시영역평균 × 인정비율';
+                    }
+                }
+            } else {
+                // 성적 없음인 경우
+                if (currentExamType === 'midterm') {
+                    calculationData.minScore = parseFloat(document.getElementById('midterm-min').value) || getMinScore('midterm');
+                } else if (currentExamType === 'final') {
+                    calculationData.minScore = parseFloat(document.getElementById('final-min').value) || getMinScore('final');
+                } else if (currentExamType === 'performance') {
+                    calculationData.minScore = parseFloat(document.getElementById('performance-min').value);
+                } else if (currentExamType === 'english-listening') {
+                    calculationData.minScore = parseFloat(document.getElementById('listening-min').value) || getMinScore('english-listening');
+                }
+                calculationData.calculationFormula = '최하점 - 1점';
+            }
+
             const resultData = {
                 id: resultCounter,
                 grade: studentGrade,
@@ -1329,7 +1643,8 @@
                 calculationBasis: calculationBasisText,
                 baseScore: Math.round(baseScore * 100000) / 100000,
                 finalScore: Math.round(finalScore * 100) / 100,
-                remarks: remarksText
+                remarks: remarksText,
+                calculationData: calculationData
             };
             resultsData.push(resultData);
             
@@ -1419,7 +1734,7 @@
             }
         }
 
-        function exportToExcel() {
+        function exportToExcelApproval() {
             if (resultsData.length === 0) {
                 alert('저장할 데이터가 없습니다.');
                 return;
@@ -1436,7 +1751,7 @@
             const grade = document.getElementById('student-grade').value || '전체';
             const subject = document.getElementById('student-subject').value || '전과목';
             
-            const fileName = `2025학년도_2학기_인정점계산기(${grade}학년_${subject})_${dateStr}.xlsx`;
+            const fileName = `2025학년도_2학기_인정점계산기_결재용(${grade}학년_${subject})_${dateStr}.xlsx`;
             
             // 워크시트 데이터 준비
             const headers = ['번호', '학년', '반', '학번', '이름', '과목', '결시시험', '세부명', '결시사유', '인정비율', '산출기준', '기준점', '인정점', '비고'];
@@ -1501,7 +1816,138 @@
             // 파일 다운로드
             XLSX.writeFile(workbook, fileName);
             
-            alert(`엑셀 파일이 저장되었습니다!\n파일명: ${fileName}`);
+            alert(`결재용 엑셀 파일이 저장되었습니다!\n파일명: ${fileName}`);
+        }
+
+        function exportToExcelReview() {
+            if (resultsData.length === 0) {
+                alert('저장할 데이터가 없습니다.');
+                return;
+            }
+            
+            // 파일명 생성
+            const today = new Date();
+            const year = today.getFullYear();
+            const month = String(today.getMonth() + 1).padStart(2, '0');
+            const day = String(today.getDate()).padStart(2, '0');
+            const dateStr = `${year}${month}${day}`;
+            
+            // 학년과 과목 정보 가져오기
+            const grade = document.getElementById('student-grade').value || '전체';
+            const subject = document.getElementById('student-subject').value || '전과목';
+            
+            const fileName = `2025학년도_2학기_인정점계산기_평가계검토용(${grade}학년_${subject})_${dateStr}.xlsx`;
+            
+            // 검토용 워크시트 데이터 준비 (상세 정보 포함)
+            const reviewHeaders = [
+                '번호', '학년', '반', '학번', '이름', '과목', '결시시험', '세부명', '결시사유', '인정비율',
+                '응시한 시험/영역', '응시 점수', '응시 평균', '결시 영역 평균', '최하점', 
+                '계산 공식', '기준점', '인정점', '비고'
+            ];
+            const reviewWorksheetData = [reviewHeaders];
+            
+            resultsData.forEach(data => {
+                // 상세 정보 수집
+                let attendedExams = '';
+                let attendedScores = '';
+                let attendedAverages = '';
+                let absentAverage = '';
+                let minScore = '';
+                let calculationFormula = '';
+                
+                // 계산 시 사용된 데이터 복원 (resultsData에 저장된 정보 기반)
+                if (data.calculationData) {
+                    const calcData = data.calculationData;
+                    
+                    if (calcData.attendedExams) {
+                        attendedExams = calcData.attendedExams.join(', ');
+                    }
+                    if (calcData.attendedScores) {
+                        attendedScores = calcData.attendedScores.join(', ');
+                    }
+                    if (calcData.attendedAverages) {
+                        attendedAverages = calcData.attendedAverages.join(', ');
+                    }
+                    if (calcData.absentAverage) {
+                        absentAverage = calcData.absentAverage;
+                    }
+                    if (calcData.minScore) {
+                        minScore = calcData.minScore;
+                    }
+                    if (calcData.calculationFormula) {
+                        calculationFormula = calcData.calculationFormula;
+                    }
+                }
+                
+                reviewWorksheetData.push([
+                    data.id,
+                    data.grade,
+                    data.class,
+                    data.number,
+                    data.name,
+                    data.subject,
+                    data.examType,
+                    data.detailName,
+                    data.absenceReason,
+                    data.recognitionRate,
+                    attendedExams,
+                    attendedScores,
+                    attendedAverages,
+                    absentAverage,
+                    minScore,
+                    calculationFormula,
+                    (Math.round(data.baseScore * 100000) / 100000).toFixed(5),
+                    typeof data.finalScore === 'number' ? data.finalScore.toFixed(2) : parseFloat(data.finalScore).toFixed(2),
+                    data.remarks
+                ]);
+            });
+            
+            // XLSX 파일 생성
+            const workbook = XLSX.utils.book_new();
+            const reviewWorksheet = XLSX.utils.aoa_to_sheet(reviewWorksheetData);
+            
+            // 검토용 워크시트 컬럼 너비 설정
+            const reviewColWidths = [
+                { wch: 6 },   // 번호
+                { wch: 6 },   // 학년
+                { wch: 6 },   // 반
+                { wch: 6 },   // 학번
+                { wch: 10 },  // 이름
+                { wch: 8 },   // 과목
+                { wch: 10 },  // 결시시험
+                { wch: 12 },  // 세부명
+                { wch: 10 },  // 결시사유
+                { wch: 10 },  // 인정비율
+                { wch: 15 },  // 응시한 시험/영역
+                { wch: 12 },  // 응시 점수
+                { wch: 12 },  // 응시 평균
+                { wch: 12 },  // 결시 영역 평균
+                { wch: 10 },  // 최하점
+                { wch: 25 },  // 계산 공식
+                { wch: 10 },  // 기준점
+                { wch: 10 },  // 인정점
+                { wch: 15 }   // 비고
+            ];
+            reviewWorksheet['!cols'] = reviewColWidths;
+            
+            // 검토용 워크시트 헤더 스타일 설정
+            const reviewHeaderRange = XLSX.utils.decode_range(reviewWorksheet['!ref']);
+            for (let col = reviewHeaderRange.s.c; col <= reviewHeaderRange.e.c; col++) {
+                const cellAddress = XLSX.utils.encode_cell({ r: 0, c: col });
+                if (!reviewWorksheet[cellAddress]) continue;
+                reviewWorksheet[cellAddress].s = {
+                    font: { bold: true, color: { rgb: "FFFFFF" } },
+                    fill: { fgColor: { rgb: "2E75B6" } },
+                    alignment: { horizontal: "center", vertical: "center" }
+                };
+            }
+            
+            XLSX.utils.book_append_sheet(workbook, reviewWorksheet, "평가계검토용");
+            
+            // 파일 다운로드
+            XLSX.writeFile(workbook, fileName);
+            
+            alert(`평가계 검토용 엑셀 파일이 저장되었습니다!\n파일명: ${fileName}`);
         }
 
         function copyResults() {
@@ -1572,6 +2018,7 @@
             
             // 드롭다운 카운터 초기화
             dropdownPerformanceCounter = 0;
+            dropdownPerformanceListeningCounter = 0;
         }
 
         function openFormulaModal() {
@@ -1672,6 +2119,34 @@
                 
                 savedAverages[key] = data;
                 localStorage.setItem('savedAverages', JSON.stringify(savedAverages));
+            }
+            
+            // 영어듣기 제외 수행평가 평균 자동 업데이트
+            updatePerformanceExcludingListeningAverage();
+        }
+        
+        function updatePerformanceExcludingListeningAverage() {
+            const perfExcludingField = document.getElementById('perf-excluding-listening-avg');
+            if (perfExcludingField) {
+                let totalAvg = 0;
+                let count = 0;
+                
+                for (let i = 1; i <= 4; i++) {
+                    const avgInput = document.getElementById(`perf${i}-avg-input`);
+                    if (avgInput && avgInput.value) {
+                        const avg = parseFloat(avgInput.value);
+                        if (!isNaN(avg)) {
+                            totalAvg += avg;
+                            count++;
+                        }
+                    }
+                }
+                
+                if (count > 0) {
+                    perfExcludingField.value = (totalAvg / count).toFixed(2);
+                } else {
+                    perfExcludingField.value = '';
+                }
             }
         }
 
@@ -1851,35 +2326,37 @@
             const targetElement = document.getElementById(fieldId);
             
             if (sourceElement && targetElement) {
-                if (sourceId === 'getPerformanceExcludingListening') {
-                    // 영어듣기 제외한 수행평가 평균 계산
-                    const grade = document.getElementById('student-grade').value;
-                    const subject = document.getElementById('student-subject').value;
-                    
-                    if (grade && subject) {
-                        const key = `${grade}-${subject}`;
-                        const data = savedAverages[key];
-                        
-                        if (data) {
-                            let totalAvg = 0;
-                            let count = 0;
-                            
-                            for (let i = 1; i <= 4; i++) {
-                                const avg = parseFloat(data[`perf${i}Avg`]);
-                                if (!isNaN(avg)) {
-                                    totalAvg += avg;
-                                    count++;
-                                }
-                            }
-                            
-                            if (count > 0) {
-                                targetElement.value = (totalAvg / count).toFixed(2);
-                            }
-                        }
+                targetElement.value = sourceElement.value;
+            }
+            
+            // 영어듣기 제외 수행평가 평균 자동 계산
+            if (fieldId === 'perf-excluding-listening-avg') {
+                updatePerformanceExcludingListeningInForm();
+            }
+        }
+        
+        function updatePerformanceExcludingListeningInForm() {
+            const targetElement = document.getElementById('perf-excluding-listening-avg');
+            if (!targetElement) return;
+            
+            let totalAvg = 0;
+            let count = 0;
+            
+            for (let i = 1; i <= 4; i++) {
+                const avgInput = document.getElementById(`perf${i}-avg-input`);
+                if (avgInput && avgInput.value) {
+                    const avg = parseFloat(avgInput.value);
+                    if (!isNaN(avg)) {
+                        totalAvg += avg;
+                        count++;
                     }
-                } else {
-                    targetElement.value = sourceElement.value;
                 }
+            }
+            
+            if (count > 0) {
+                targetElement.value = (totalAvg / count).toFixed(2);
+            } else {
+                targetElement.value = '';
             }
         }
 
