@@ -328,7 +328,7 @@
                                     <th class="border border-gray-300 px-3 py-2 text-center font-semibold text-green-800 text-sm">세부명</th>
                                     <th class="border border-gray-300 px-3 py-2 text-center font-semibold text-green-800 text-sm">결시사유</th>
                                     <th class="border border-gray-300 px-3 py-2 text-center font-semibold text-green-800 text-sm">인정비율</th>
-                                    <th class="border border-gray-300 px-3 py-2 text-center font-semibold text-green-800 text-sm">성적 유무</th>
+                                    <th class="border border-gray-300 px-3 py-2 text-center font-semibold text-green-800 text-sm">계산 기준</th>
                                     <th class="border border-gray-300 px-3 py-2 text-center font-semibold text-green-800 text-sm">기준점</th>
                                     <th class="border border-gray-300 px-3 py-2 text-center font-semibold text-green-800 text-sm">인정점</th>
                                     <th class="border border-gray-300 px-3 py-2 text-center font-semibold text-green-800 text-sm">비고</th>
@@ -1439,34 +1439,34 @@
                 recognitionRateText = '최하점의 차하점';
             }
             
-            // 성적 유무 판단
-            let scoreAvailability = '';
+            // 계산 기준 판단
+            let calculationBasis = '';
             
             if (currentMethod === 'no-score') {
-                scoreAvailability = '성적 없음';
+                calculationBasis = '성적 없음';
             } else if (currentExamType === 'midterm') {
                 if (currentMethod === 'final-score') {
-                    scoreAvailability = '기말고사';
+                    calculationBasis = '기말고사';
                 } else if (currentMethod === 'performance-only') {
-                    scoreAvailability = '수행평가(전체)';
+                    calculationBasis = '수행평가(전체)';
                 }
             } else if (currentExamType === 'final') {
                 if (currentMethod === 'midterm-score') {
-                    scoreAvailability = '중간고사';
+                    calculationBasis = '중간고사';
                 } else if (currentMethod === 'performance-only') {
-                    scoreAvailability = '수행평가(전체)';
+                    calculationBasis = '수행평가(전체)';
                 }
             } else if (currentExamType === 'performance') {
                 if (currentMethod === 'other-performance') {
-                    scoreAvailability = '수행평가(부분)';
+                    calculationBasis = '수행평가(부분)';
                 } else if (currentMethod === 'written-exam') {
-                    scoreAvailability = '지필고사';
+                    calculationBasis = '지필고사';
                 }
             } else if (currentExamType === 'english-listening') {
                 if (currentMethod === 'written-exam') {
-                    scoreAvailability = '지필고사';
+                    calculationBasis = '지필고사';
                 } else if (currentMethod === 'performance-only') {
-                    scoreAvailability = '수행평가(부분)';
+                    calculationBasis = '수행평가(부분)';
                 }
             }
             
@@ -1474,13 +1474,22 @@
             let minScoreValue = '';
             if (currentMethod === 'no-score') {
                 if (currentExamType === 'midterm') {
-                    minScoreValue = parseFloat(document.getElementById('midterm-min').value) || getMinScore('midterm');
+                    const inputValue = document.getElementById('midterm-min');
+                    minScoreValue = inputValue ? parseFloat(inputValue.value) : getMinScore('midterm');
                 } else if (currentExamType === 'final') {
-                    minScoreValue = parseFloat(document.getElementById('final-min').value) || getMinScore('final');
+                    const inputValue = document.getElementById('final-min');
+                    minScoreValue = inputValue ? parseFloat(inputValue.value) : getMinScore('final');
                 } else if (currentExamType === 'performance') {
-                    minScoreValue = parseFloat(document.getElementById('performance-min').value);
+                    const inputValue = document.getElementById('performance-min');
+                    minScoreValue = inputValue ? parseFloat(inputValue.value) : null;
                 } else if (currentExamType === 'english-listening') {
-                    minScoreValue = parseFloat(document.getElementById('listening-min').value) || getMinScore('english-listening');
+                    const inputValue = document.getElementById('listening-min');
+                    minScoreValue = inputValue ? parseFloat(inputValue.value) : getMinScore('english-listening');
+                }
+                
+                // NaN이면 빈 문자열로 처리
+                if (isNaN(minScoreValue)) {
+                    minScoreValue = '';
                 }
             }
             
@@ -1648,7 +1657,7 @@
                 detailName: detailName,
                 absenceReason: reasonText,
                 recognitionRate: recognitionRateText,
-                scoreAvailability: scoreAvailability,
+                calculationBasis: calculationBasis,
                 minScore: minScoreValue,
                 baseScore: Math.round(baseScore * 100000) / 100000,
                 finalScore: Math.round(finalScore * 100) / 100,
@@ -1678,14 +1687,14 @@
                              currentAbsenceReason === 'approved' ? 'text-blue-600' :
                              'text-gray-600';
             
-            // 성적 유무 스타일
-            let scoreAvailabilityClass = 'text-gray-700';
-            if (scoreAvailability === '성적 없음') {
-                scoreAvailabilityClass = 'text-red-600 font-medium';
-            } else if (scoreAvailability.includes('지필고사') || scoreAvailability.includes('중간고사') || scoreAvailability.includes('기말고사')) {
-                scoreAvailabilityClass = 'text-blue-600 font-medium';
-            } else if (scoreAvailability.includes('수행평가')) {
-                scoreAvailabilityClass = 'text-purple-600 font-medium';
+            // 계산 기준 스타일
+            let calculationBasisClass = 'text-gray-700';
+            if (calculationBasis === '성적 없음') {
+                calculationBasisClass = 'text-red-600 font-medium';
+            } else if (calculationBasis.includes('지필고사') || calculationBasis.includes('중간고사') || calculationBasis.includes('기말고사')) {
+                calculationBasisClass = 'text-blue-600 font-medium';
+            } else if (calculationBasis.includes('수행평가')) {
+                calculationBasisClass = 'text-purple-600 font-medium';
             }
             
             row.innerHTML = `
@@ -1706,7 +1715,10 @@
                     <span class="font-medium ${rateClass}">${recognitionRateText}</span>
                 </td>
                 <td class="border border-gray-300 px-3 py-2 text-center text-sm">
-                    <span class="text-xs ${scoreAvailabilityClass}">${scoreAvailability}</span>
+                    <span class="text-xs ${calculationBasisClass}">${calculationBasis}</span>
+                </td>
+                <td class="border border-gray-300 px-3 py-2 text-center text-sm">
+                    <span class="text-sm text-gray-700">${minScoreValue || '-'}</span>
                 </td>
                 <td class="border border-gray-300 px-3 py-2 text-center text-sm">${baseScoreDisplay}</td>
                 <td class="border border-gray-300 px-3 py-2 text-center text-sm">${finalScoreDisplay}</td>
@@ -1775,12 +1787,12 @@
             const fileName = `2025학년도_2학기_인정점계산기_결재용(${grade}학년_${subject})_${dateStr}.xlsx`;
             
             // 워크시트 데이터 준비
-            const headers = ['번호', '학년', '반', '학번', '이름', '과목', '결시시험', '세부명', '결시사유', '인정비율', '성적 유무', '최하점', '기준점', '인정점', '비고'];
+            const headers = ['번호', '학년', '반', '학번', '이름', '과목', '결시시험', '세부명', '결시사유', '인정비율', '계산 기준', '최하점', '기준점', '인정점', '비고'];
             const worksheetData = [headers];
             
             resultsData.forEach(data => {
                 let minScore = '';
-                if (data.minScore) {
+                if (data.minScore !== undefined && data.minScore !== '') {
                     minScore = data.minScore;
                 } else if (data.calculationData && data.calculationData.minScore) {
                     minScore = data.calculationData.minScore;
@@ -1797,7 +1809,7 @@
                     data.detailName,
                     data.absenceReason,
                     data.recognitionRate,
-                    data.scoreAvailability,
+                    data.calculationBasis,
                     minScore,
                     (Math.round(data.baseScore * 100000) / 100000).toFixed(5),
                     typeof data.finalScore === 'number' ? data.finalScore.toFixed(2) : parseFloat(data.finalScore).toFixed(2),
@@ -1878,7 +1890,7 @@
             
             // 동적 헤더 생성
             const baseHeaders = [
-                '번호', '학년', '반', '학번', '이름', '과목', '결시시험', '결시사유', '인정비율', '성적 유무'
+                '번호', '학년', '반', '학번', '이름', '과목', '결시시험', '결시사유', '인정비율', '계산 기준'
             ];
             
             // 결시 영역 헤더
@@ -1908,7 +1920,7 @@
                     data.examType,
                     data.absenceReason,
                     data.recognitionRate,
-                    data.scoreAvailability
+                    data.calculationBasis
                 ];
                 
                 // 결시 영역 정보
@@ -1947,7 +1959,7 @@
                 // 나머지 정보
                 let minScore = '';
                 
-                if (data.minScore) {
+                if (data.minScore !== undefined && data.minScore !== '') {
                     minScore = data.minScore;
                 } else if (calcData && calcData.minScore) {
                     minScore = calcData.minScore;
@@ -2039,12 +2051,12 @@
                 return;
             }
             
-            const headers = ['번호', '학년', '반', '학번', '이름', '과목', '결시시험', '세부명', '결시사유', '인정비율', '성적 유무', '최하점', '기준점', '인정점', '비고'];
+            const headers = ['번호', '학년', '반', '학번', '이름', '과목', '결시시험', '세부명', '결시사유', '인정비율', '계산 기준', '최하점', '기준점', '인정점', '비고'];
             let textContent = headers.join('\t') + '\n';
             
             resultsData.forEach(data => {
                 let minScore = '';
-                if (data.minScore) {
+                if (data.minScore !== undefined && data.minScore !== '') {
                     minScore = data.minScore;
                 } else if (data.calculationData && data.calculationData.minScore) {
                     minScore = data.calculationData.minScore;
@@ -2061,7 +2073,7 @@
                     data.detailName,
                     data.absenceReason,
                     data.recognitionRate,
-                    data.scoreAvailability,
+                    data.calculationBasis,
                     minScore,
                     (Math.round(data.baseScore * 100000) / 100000).toFixed(5),
                     typeof data.finalScore === 'number' ? data.finalScore.toFixed(2) : parseFloat(data.finalScore).toFixed(2),
