@@ -329,7 +329,6 @@
                                     <th class="border border-gray-300 px-3 py-2 text-center font-semibold text-green-800 text-sm">결시사유</th>
                                     <th class="border border-gray-300 px-3 py-2 text-center font-semibold text-green-800 text-sm">인정비율</th>
                                     <th class="border border-gray-300 px-3 py-2 text-center font-semibold text-green-800 text-sm">성적 유무</th>
-                                    <th class="border border-gray-300 px-3 py-2 text-center font-semibold text-green-800 text-sm">계산 기준</th>
                                     <th class="border border-gray-300 px-3 py-2 text-center font-semibold text-green-800 text-sm">기준점</th>
                                     <th class="border border-gray-300 px-3 py-2 text-center font-semibold text-green-800 text-sm">인정점</th>
                                     <th class="border border-gray-300 px-3 py-2 text-center font-semibold text-green-800 text-sm">비고</th>
@@ -1442,42 +1441,32 @@
             
             // 성적 유무 판단
             let scoreAvailability = '';
-            let calculationBasis = '';
             
             if (currentMethod === 'no-score') {
                 scoreAvailability = '성적 없음';
-                calculationBasis = '최하점의 차하점';
             } else if (currentExamType === 'midterm') {
                 if (currentMethod === 'final-score') {
-                    scoreAvailability = '성적 있음';
-                    calculationBasis = '기말고사';
+                    scoreAvailability = '기말고사';
                 } else if (currentMethod === 'performance-only') {
-                    scoreAvailability = '성적 있음';
-                    calculationBasis = '수행평가(전체)';
+                    scoreAvailability = '수행평가(전체)';
                 }
             } else if (currentExamType === 'final') {
                 if (currentMethod === 'midterm-score') {
-                    scoreAvailability = '성적 있음';
-                    calculationBasis = '중간고사';
+                    scoreAvailability = '중간고사';
                 } else if (currentMethod === 'performance-only') {
-                    scoreAvailability = '성적 있음';
-                    calculationBasis = '수행평가(전체)';
+                    scoreAvailability = '수행평가(전체)';
                 }
             } else if (currentExamType === 'performance') {
                 if (currentMethod === 'other-performance') {
-                    scoreAvailability = '성적 있음';
-                    calculationBasis = '수행평가(부분)';
+                    scoreAvailability = '수행평가(부분)';
                 } else if (currentMethod === 'written-exam') {
-                    scoreAvailability = '성적 있음';
-                    calculationBasis = '지필고사';
+                    scoreAvailability = '지필고사';
                 }
             } else if (currentExamType === 'english-listening') {
                 if (currentMethod === 'written-exam') {
-                    scoreAvailability = '성적 있음';
-                    calculationBasis = '지필고사';
+                    scoreAvailability = '지필고사';
                 } else if (currentMethod === 'performance-only') {
-                    scoreAvailability = '성적 있음';
-                    calculationBasis = '수행평가(부분)';
+                    scoreAvailability = '수행평가(부분)';
                 }
             }
             
@@ -1676,16 +1665,13 @@
                              'text-gray-600';
             
             // 성적 유무 스타일
-            const scoreAvailabilityClass = scoreAvailability === '성적 있음' ? 'text-blue-600 font-medium' : 'text-red-600 font-medium';
-            
-            // 계산 기준 스타일
-            let calculationBasisClass = 'text-gray-700';
-            if (calculationBasis.includes('지필고사')) {
-                calculationBasisClass = 'text-blue-600 font-medium';
-            } else if (calculationBasis.includes('수행평가')) {
-                calculationBasisClass = 'text-purple-600 font-medium';
-            } else if (calculationBasis.includes('최하점')) {
-                calculationBasisClass = 'text-red-600 font-medium';
+            let scoreAvailabilityClass = 'text-gray-700';
+            if (scoreAvailability === '성적 없음') {
+                scoreAvailabilityClass = 'text-red-600 font-medium';
+            } else if (scoreAvailability.includes('지필고사') || scoreAvailability.includes('중간고사') || scoreAvailability.includes('기말고사')) {
+                scoreAvailabilityClass = 'text-blue-600 font-medium';
+            } else if (scoreAvailability.includes('수행평가')) {
+                scoreAvailabilityClass = 'text-purple-600 font-medium';
             }
             
             row.innerHTML = `
@@ -1707,9 +1693,6 @@
                 </td>
                 <td class="border border-gray-300 px-3 py-2 text-center text-sm">
                     <span class="text-xs ${scoreAvailabilityClass}">${scoreAvailability}</span>
-                </td>
-                <td class="border border-gray-300 px-3 py-2 text-center text-sm">
-                    <span class="text-xs ${calculationBasisClass}">${calculationBasis}</span>
                 </td>
                 <td class="border border-gray-300 px-3 py-2 text-center text-sm">${baseScoreDisplay}</td>
                 <td class="border border-gray-300 px-3 py-2 text-center text-sm">${finalScoreDisplay}</td>
@@ -1778,7 +1761,7 @@
             const fileName = `2025학년도_2학기_인정점계산기_결재용(${grade}학년_${subject})_${dateStr}.xlsx`;
             
             // 워크시트 데이터 준비
-            const headers = ['번호', '학년', '반', '학번', '이름', '과목', '결시시험', '세부명', '결시사유', '인정비율', '성적 유무', '계산 기준', '최하점', '기준점', '인정점', '비고'];
+            const headers = ['번호', '학년', '반', '학번', '이름', '과목', '결시시험', '세부명', '결시사유', '인정비율', '성적 유무', '최하점', '기준점', '인정점', '비고'];
             const worksheetData = [headers];
             
             resultsData.forEach(data => {
@@ -1799,7 +1782,6 @@
                     data.absenceReason,
                     data.recognitionRate,
                     data.scoreAvailability,
-                    data.calculationBasis,
                     minScore,
                     (Math.round(data.baseScore * 100000) / 100000).toFixed(5),
                     typeof data.finalScore === 'number' ? data.finalScore.toFixed(2) : parseFloat(data.finalScore).toFixed(2),
@@ -1823,8 +1805,7 @@
                 { wch: 12 },  // 세부명
                 { wch: 10 },  // 결시사유
                 { wch: 10 },  // 인정비율
-                { wch: 10 },  // 성적 유무
-                { wch: 12 },  // 계산 기준
+                { wch: 15 },  // 성적 유무
                 { wch: 8 },   // 최하점
                 { wch: 10 },  // 기준점
                 { wch: 10 },  // 인정점
@@ -1881,7 +1862,7 @@
             
             // 동적 헤더 생성
             const baseHeaders = [
-                '번호', '학년', '반', '학번', '이름', '과목', '결시시험', '결시사유', '인정비율', '성적 유무', '계산 기준'
+                '번호', '학년', '반', '학번', '이름', '과목', '결시시험', '결시사유', '인정비율', '성적 유무'
             ];
             
             // 결시 영역 헤더
@@ -1911,8 +1892,7 @@
                     data.examType,
                     data.absenceReason,
                     data.recognitionRate,
-                    data.scoreAvailability,
-                    data.calculationBasis
+                    data.scoreAvailability
                 ];
                 
                 // 결시 영역 정보
@@ -1982,8 +1962,7 @@
                 { wch: 10 },  // 결시시험
                 { wch: 10 },  // 결시사유
                 { wch: 10 },  // 인정비율
-                { wch: 10 },  // 성적 유무
-                { wch: 12 },  // 계산 기준
+                { wch: 15 },  // 성적 유무
                 { wch: 12 },  // 결시영역명
                 { wch: 10 }   // 결시영역평균
             ];
@@ -2044,7 +2023,7 @@
                 return;
             }
             
-            const headers = ['번호', '학년', '반', '학번', '이름', '과목', '결시시험', '세부명', '결시사유', '인정비율', '성적 유무', '계산 기준', '최하점', '기준점', '인정점', '비고'];
+            const headers = ['번호', '학년', '반', '학번', '이름', '과목', '결시시험', '세부명', '결시사유', '인정비율', '성적 유무', '최하점', '기준점', '인정점', '비고'];
             let textContent = headers.join('\t') + '\n';
             
             resultsData.forEach(data => {
@@ -2065,7 +2044,6 @@
                     data.absenceReason,
                     data.recognitionRate,
                     data.scoreAvailability,
-                    data.calculationBasis,
                     minScore,
                     (Math.round(data.baseScore * 100000) / 100000).toFixed(5),
                     typeof data.finalScore === 'number' ? data.finalScore.toFixed(2) : parseFloat(data.finalScore).toFixed(2),
