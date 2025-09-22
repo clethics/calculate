@@ -1841,17 +1841,16 @@
             // 검토용 워크시트 데이터 준비 (상세 정보 포함)
             const reviewHeaders = [
                 '번호', '학년', '반', '학번', '이름', '과목', '결시시험', '세부명', '결시사유', '인정비율',
-                '응시한 시험/영역', '응시 점수', '응시 평균', '결시 영역 평균', '최하점', 
+                '수행평가/지필고사', '응시 영역명/점수/평균', '결시 영역명/평균', '최하점', 
                 '계산 공식', '기준점', '인정점', '비고'
             ];
             const reviewWorksheetData = [reviewHeaders];
             
             resultsData.forEach(data => {
                 // 상세 정보 수집
-                let attendedExams = '';
-                let attendedScores = '';
-                let attendedAverages = '';
-                let absentAverage = '';
+                let examTypeCategory = '';
+                let attendedDetails = '';
+                let absentDetails = '';
                 let minScore = '';
                 let calculationFormula = '';
                 
@@ -1859,18 +1858,30 @@
                 if (data.calculationData) {
                     const calcData = data.calculationData;
                     
-                    if (calcData.attendedExams) {
-                        attendedExams = calcData.attendedExams.join(', ');
+                    // 수행평가/지필고사 구분
+                    if (data.examType === '지필고사') {
+                        examTypeCategory = '지필고사';
+                    } else {
+                        examTypeCategory = '수행평가';
                     }
-                    if (calcData.attendedScores) {
-                        attendedScores = calcData.attendedScores.join(', ');
+                    
+                    // 응시한 영역명/점수/평균 구성
+                    if (calcData.attendedExams && calcData.attendedScores && calcData.attendedAverages) {
+                        const attendedParts = [];
+                        for (let i = 0; i < calcData.attendedExams.length; i++) {
+                            const examName = calcData.attendedExams[i];
+                            const score = calcData.attendedScores[i];
+                            const avg = calcData.attendedAverages[i];
+                            attendedParts.push(`${examName}/${score}/${avg}`);
+                        }
+                        attendedDetails = attendedParts.join(', ');
                     }
-                    if (calcData.attendedAverages) {
-                        attendedAverages = calcData.attendedAverages.join(', ');
-                    }
+                    
+                    // 결시 영역명/평균 구성
                     if (calcData.absentAverage) {
-                        absentAverage = calcData.absentAverage;
+                        absentDetails = `${data.detailName}/${calcData.absentAverage}`;
                     }
+                    
                     if (calcData.minScore) {
                         minScore = calcData.minScore;
                     }
@@ -1890,10 +1901,9 @@
                     data.detailName,
                     data.absenceReason,
                     data.recognitionRate,
-                    attendedExams,
-                    attendedScores,
-                    attendedAverages,
-                    absentAverage,
+                    examTypeCategory,
+                    attendedDetails,
+                    absentDetails,
                     minScore,
                     calculationFormula,
                     (Math.round(data.baseScore * 100000) / 100000).toFixed(5),
@@ -1918,10 +1928,9 @@
                 { wch: 12 },  // 세부명
                 { wch: 10 },  // 결시사유
                 { wch: 10 },  // 인정비율
-                { wch: 15 },  // 응시한 시험/영역
-                { wch: 12 },  // 응시 점수
-                { wch: 12 },  // 응시 평균
-                { wch: 12 },  // 결시 영역 평균
+                { wch: 12 },  // 수행평가/지필고사
+                { wch: 25 },  // 응시 영역명/점수/평균
+                { wch: 18 },  // 결시 영역명/평균
                 { wch: 10 },  // 최하점
                 { wch: 25 },  // 계산 공식
                 { wch: 10 },  // 기준점
