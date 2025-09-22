@@ -1788,17 +1788,10 @@
             const fileName = `2025학년도_2학기_인정점계산기_결재용(${grade}학년_${subject})_${dateStr}.xlsx`;
             
             // 워크시트 데이터 준비
-            const headers = ['번호', '학년', '반', '학번', '이름', '과목', '결시시험', '세부명', '결시사유', '인정비율', '계산 기준', '최하점', '기준점', '인정점', '비고'];
+            const headers = ['번호', '학년', '반', '학번', '이름', '과목', '결시시험', '세부명', '결시사유', '인정비율', '계산 기준', '기준점', '인정점', '비고'];
             const worksheetData = [headers];
             
             resultsData.forEach(data => {
-                let minScore = '';
-                if (data.minScore !== undefined && data.minScore !== '') {
-                    minScore = data.minScore;
-                } else if (data.calculationData && data.calculationData.minScore) {
-                    minScore = data.calculationData.minScore;
-                }
-                
                 worksheetData.push([
                     data.id,
                     data.grade,
@@ -1811,7 +1804,6 @@
                     data.absenceReason,
                     data.recognitionRate,
                     data.calculationBasis,
-                    minScore,
                     (Math.round(data.baseScore * 100000) / 100000).toFixed(5),
                     typeof data.finalScore === 'number' ? data.finalScore.toFixed(2) : parseFloat(data.finalScore).toFixed(2),
                     data.remarks
@@ -1834,8 +1826,7 @@
                 { wch: 12 },  // 세부명
                 { wch: 10 },  // 결시사유
                 { wch: 10 },  // 인정비율
-                { wch: 15 },  // 성적 유무
-                { wch: 8 },   // 최하점
+                { wch: 15 },  // 계산 기준
                 { wch: 10 },  // 기준점
                 { wch: 10 },  // 인정점
                 { wch: 15 }   // 비고
